@@ -22,9 +22,7 @@ define([
             },
         });
 
-        let test = function(a, b, expected) {
-            assert.equal(ionhash.byteArrayComparator(a, b), expected);
-        };
+        let test = function(a, b, expected) { assert.equal(ionhash.byteArrayComparator(a, b), expected); };
     }
 );
 
