@@ -4,24 +4,24 @@ module.exports = function(grunt) {
 
     // Tests configuration
     intern: {
-      /*
       es6: {
-        options: {
-          config: 'tests/intern',
-          reporters: ['Console', 'node_modules/remap-istanbul/lib/intern-reporters/JsonCoverage'],
-          ionVersion: 'es6',
-        },
-      },
-      */
-      commonjs: {
         options: {
           //config: 'tests/intern',
           config: 'intern',
           //reporters: ['Console', 'node_modules/remap-istanbul/lib/intern-reporters/JsonCoverage'],
-          //ionVersion: 'commonjs',
+          //ionVersion: 'es6',
           suites: 'tests/**/*.js',
         },
       },
+//      commonjs: {
+//        options: {
+//          //config: 'tests/intern',
+//          config: 'intern',
+//          //reporters: ['Console', 'node_modules/remap-istanbul/lib/intern-reporters/JsonCoverage'],
+//          //ionVersion: 'commonjs',
+//          suites: 'tests/**/*.js',
+//        },
+//      },
     },
     clean: [
       'dist/',
@@ -84,15 +84,15 @@ module.exports = function(grunt) {
           declaration: true,
         },
       },
-      'commonjs-es6': {
-        src: ['src/**/*.ts'],
-        outDir: 'dist/commonjs/es6',
-        options: {
-          target: "es6",
-          module: "commonjs",
-          declaration: true,
-        },
-      },
+//      'commonjs-es6': {
+//        src: ['src/**/*.ts'],
+//        outDir: 'dist/commonjs/es6',
+//        options: {
+//          target: "es6",
+//          module: "commonjs",
+//          declaration: true,
+//        },
+//      },
     },
 
     // Copy of generated .js files to:
@@ -217,17 +217,17 @@ module.exports = function(grunt) {
   // Build and Translation tasks 
   //grunt.registerTask('build:browser', ['build', 'browserify:prod', 'uglify']); // standalone for browser
   //grunt.registerTask('trans:browser', ['browserify:prod', 'uglify']); // browserify (assumes 'build' was run)
-  grunt.registerTask('build:commonjs', ['ts:commonjs-es6']);
+  grunt.registerTask('build:amd', ['ts:amd-es6']);
   //grunt.registerTask('build:amd', ['ts:amd-es6']);
   //grunt.registerTask('build:amd:debug', ['ts:amd-es6-debug']); 
   //grunt.registerTask('build', ['clean', 'build:amd', 'build:cjs', 'trans:browser', 'copy:all']);
-  grunt.registerTask('build', ['clean', 'build:commonjs']);
+  grunt.registerTask('build', ['clean', 'build:amd']);
 
 
   // Tests
   //grunt.registerTask('test', ['build']);     // build and test
-  grunt.registerTask('test', ['build', 'intern:commonjs']);     // build and test
-  //grunt.registerTask('test', ['build', 'intern:es6']);     // build and test
+  //grunt.registerTask('test', ['build', 'intern:commonjs']);     // build and test
+  grunt.registerTask('test', ['build', 'intern:es6']);     // build and test
   //grunt.registerTask('test:run', ['intern:es6']);          // run test do not build
   //grunt.registerTask('test:coverage', ['remapIstanbul']);  // depends on `test:run`. Generates html output
 

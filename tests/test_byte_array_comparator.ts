@@ -2,30 +2,40 @@ define([
         'intern',
         'intern!object',
         'intern/chai!assert',
-        '/Users/pcornell/dev/ion/ion-hash-js/ion-bundle.js',
-        'dist/commonjs/es6/IonHash',
-        'intern/dojo/node!http',
+        'dist/amd/es6/IonHash',
     ],
-    function(intern, registerSuite, assert, ion, ionhash, http) {
+    function(intern, registerSuite, assert, ionhash) {
         var suite = {
-            name: 'Text nulls'
+            name: 'byteArrayComparator'
         };
 
-        suite['null'] = function() {
-            // test byteArrayComparator:
-            assert(0, byteArrayComparator([0x01, 0x02, 0x03], [0x01, 0x02, 0x03]));
-            assert(-1, byteArrayComparator([0x01, 0x02, 0x03], [0x01, 0x02, 0x04]));
-            assert(-1, byteArrayComparator([0x01, 0x02, 0x03], [0x01, 0x02, 0x03, 0x04]));
-            assert(1, byteArrayComparator([0x01, 0x02, 0x04], [0x01, 0x02, 0x03]));
-            assert(1, byteArrayComparator([0x01, 0x02, 0x03, 0x04], [0x01, 0x02, 0x03]));
+        suite['equals'] = function() {
+            assert.equal(ionhash.byteArrayComparator([0x01, 0x02, 0x03], [0x01, 0x02, 0x03]), 0);
+        };
 
-            // test unsigned behavior:
-            assert(-1, byteArrayComparator([0x01], [0x7f]));
-            assert(-1, byteArrayComparator([0x01], [0x80]));
-            assert(-1, byteArrayComparator([0x01], [0xff]));
-            assert(1, byteArrayComparator([0x7f], [0x01]));
-            assert(1, byteArrayComparator([0x80], [0x01]));
-            assert(1, byteArrayComparator([0xff], [0x01]));
+        suite['lessThan'] = function() {
+            assert.equal(ionhash.byteArrayComparator([0x01, 0x02, 0x03], [0x01, 0x02, 0x04]), -1);
+        };
+
+        suite['lessThanDueToLength'] = function() {
+            assert.equal(ionhash.byteArrayComparator([0x01, 0x02, 0x03], [0x01, 0x02, 0x03, 0x04]), -1);
+        };
+
+        suite['greaterThan'] = function() {
+            assert.equal(ionhash.byteArrayComparator([0x01, 0x02, 0x04], [0x01, 0x02, 0x03]), 1);
+        };
+
+        suite['greaterThanDueToLength'] = function() {
+            assert.equal(ionhash.byteArrayComparator([0x01, 0x02, 0x03, 0x04], [0x01, 0x02, 0x03]), 1);
+        };
+
+        suite['unsignedBehavior'] = function() {
+            assert.equal(ionhash.byteArrayComparator([0x01], [0x7f]), -1);
+            assert.equal(ionhash.byteArrayComparator([0x01], [0x80]), -1);
+            assert.equal(ionhash.byteArrayComparator([0x01], [0xff]), -1);
+            assert.equal(ionhash.byteArrayComparator([0x7f], [0x01]), 1);
+            assert.equal(ionhash.byteArrayComparator([0x80], [0x01]), 1);
+            assert.equal(ionhash.byteArrayComparator([0xff], [0x01]), 1);
         };
 
         registerSuite(suite);

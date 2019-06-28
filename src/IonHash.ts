@@ -1,9 +1,6 @@
 // TBD
 // use uint8array instead of list<number> ?
 
-
-//let ion = require("/Users/pcornell/dev/ion/ion-hash-js/ion-bundle.js");
-
 import * as ion from '/Users/pcornell/dev/ion/ion-hash-js/ion-bundle.js';
 
 let write = function (s) {
@@ -34,14 +31,14 @@ function serializeNextValue(reader, type): Array<number> {
     return bytes.slice(4);
 }
 
-let reader = ion.makeReader("null true 5 /*1.0e*/ 2.3 2000-01-01T hello \"hello\" /*{{\"hello\"}}*/ /*{{aGVsbG8=}}*/");
-let type = reader.next();
-while (type) {
-    let bytes = serializeNextValue(reader, type);
-    writeln(reader.value() + ": " + toHexString(bytes));
-    type = reader.next();
-}
-writeln();
+//let reader = ion.makeReader("null true 5 /*1.0e*/ 2.3 2000-01-01T hello \"hello\" /*{{\"hello\"}}*/ /*{{aGVsbG8=}}*/");
+//let type = reader.next();
+//while (type) {
+//    let bytes = serializeNextValue(reader, type);
+//    writeln(reader.value() + ": " + toHexString(bytes));
+//    type = reader.next();
+//}
+//writeln();
 
 
 function toHexString(byteArray) {
@@ -50,7 +47,7 @@ function toHexString(byteArray) {
     }).join(' ')
 }
 
-function byteArrayComparator(a: Array<number>, b: Array<number>) {
+export function byteArrayComparator(a: Array<number>, b: Array<number>) {
     let i = 0;
     while (i < a.length && i < b.length) {
         let a_byte = a[i];
@@ -79,8 +76,7 @@ const BEGIN_MARKER_BYTE = 0x0B;
 const END_MARKER_BYTE = 0x0E;
 const ESCAPE_BYTE = 0x0C;
 
-//function escape(bytes: Array<number>) {
-function _escape(bytes) {
+export function escape(bytes) {
     bytes.forEach((b) => {
         if (b == BEGIN_MARKER_BYTE || b == END_MARKER_BYTE || b == ESCAPE_BYTE) {
             // found a byte that needs to be escaped;  build a new byte array that
