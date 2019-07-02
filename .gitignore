@@ -1,0 +1,12 @@
+*~
+*#
+*.swp
+/.idea
+/.tscache
+/dist
+/node_modules
+/package-lock.json
+/src/*.js
+/tests/*.js
+/tscommand-*
+
