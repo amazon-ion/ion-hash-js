@@ -26,7 +26,8 @@ define([
         registerSuite({
             name: 'HashReader',
             base: () => {
-                let reader = ion.makeReader('null true 5 -5 2019-07-01T hello "hello"');
+                let reader = ion.makeReader('null null.string true 5 -5 2019-07-01T hello "hello"');
+                //let reader = ion.makeReader('[1, 2, 3] (1 2 3) {a: 1, b: 2, c: 3}');
                 //let reader = ion.makeReader('5 6 7');
                 let hashReader = ionhash.hashReader(reader, ionHasherProvider);
                 while (true) {
@@ -34,7 +35,7 @@ define([
                     if (ionType == undefined) {
                         break;
                     }
-                    writeln("next(): " + ionType.bid + ", " + hashReader.value());
+                    writeln("next(): " + ionType.name + ", " + ionType.bid + ", " + hashReader.value());
                 }
                 let digest = hashReader.digest();
                 writeln("digest = " + toHexString(digest));

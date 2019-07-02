@@ -67,7 +67,9 @@ class HashReaderImpl implements HashReader, TypedValue {
     isNull()        : boolean   { return this.reader.isNull() }
     next()          : IonType   {
         this.ionType = this.reader.next();
-        this.hasher.scalar(this.ionType, this.value());
+        if (this.ionType != undefined) {
+            this.hasher.scalar(this.ionType, this.value(), this.isNull());
+        }
         return this.ionType;
     }
     numberValue()   : number    { return this.reader.numberValue() }
@@ -136,8 +138,8 @@ class Hasher {
         this.hasherStack.push(this.currentHasher);
     }
 
-    scalar(type, value) {
-        this.currentHasher.scalar(type, value);
+    scalar(type, value, isNull) {
+        this.currentHasher.scalar(type, value, isNull);
     }
 
     stepIn() {
@@ -166,7 +168,7 @@ class Serializer {
         "float":     (value, writer) => { writer.writeNull() },
         "decimal":   (value, writer) => { writer.writeDecimal(value) },
         "timestamp": (value, writer) => { writer.writeTimestamp(value) },
-        "symbol":    (value, writer) => { writer.writeSymbol(value) },
+        "symbol":    (value, writer) => { writer.writeString(value) },
         "string":    (value, writer) => { writer.writeString(value) },
         "clob":      (value, writer) => { writer.writeClob(value) },
         "blob":      (value, writer) => { writer.writeBlob(value) },
@@ -224,8 +226,16 @@ class Serializer {
     }
     */
 
+    private getNullBytes(type) {
+        let writer = ion.makeBinaryWriter();
+        writer.writeNull(type);
+        writer.close();
+        let bytes = writer.getBytes().slice(4);
+        return bytes;
+    }
+
     private getBytes(type, value) {
-        if (value != undefined) {
+        if (value != undefined) {   // TBD is this needed?
             let writer = ion.makeBinaryWriter();
             Serializer.serializers[type.name](value, writer);
             writer.close();
@@ -235,16 +245,50 @@ class Serializer {
         return [];
     }
 
+    private getLengthLength(bytes): number {
+        if ((bytes[0] & 0x0F) == 0x0E) {
+            // read subsequent byte(s) as the "length" field
+            for (let i = 1; i < bytes.length; i++) {
+                if ((bytes[i] & 0x80) != 0) {
+                    return i;
+                }
+            }
+            throw new Error("Problem while reading VarUInt!");
+        }
+        return 0;
+    }
 
-    scalar(type, value) {
+    private scalarOrNullSplitParts(type, bytes) {
+        let offset = 1 + this.getLengthLength(bytes);
+
+        // the representation is everything after TL (first byte) and length
+        let representation = bytes.slice(offset);
+
+        let tq = bytes[0];
+        if (type != IonTypes.BOOL
+                && type != IonTypes.SYMBOL
+                && (tq & 0x0F) != 0x0F) {    // not a null value
+            tq &= 0xF0;                      // zero - out the L nibble
+        }
+
+        return [tq, representation]
+    }
+
+
+    scalar(type, value, isNull) {
         //self._handle_annotations_begin(ion_event)
         this.beginMarker();
-        let scalarBytes = this.getBytes(type, value);
-        this.update(scalarBytes);   // TBD remove
-        //[tq, representation] = _scalar_or_null_split_parts(ion_event.ion_type, scalar_bytes)
-        //self._update(bytes([tq]))
-        //if len(representation) > 0:
-            //self._update(_escape(representation))
+        let scalarBytes;
+        if (isNull) {
+            scalarBytes = this.getNullBytes(type);
+        } else {
+            scalarBytes = this.getBytes(type, value);
+        }
+        let [tq, representation] = this.scalarOrNullSplitParts(type, scalarBytes);
+        this.update(tq);
+        if (representation.length > 0) {
+            this.update(escape(representation));
+        }
         this.endMarker();
         //self._handle_annotations_end(ion_event)
     }
