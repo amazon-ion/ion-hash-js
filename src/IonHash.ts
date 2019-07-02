@@ -1,42 +1,87 @@
 // TBD
-// use uint8array instead of list<number> ?
-// use rewire to gain access to 'private' functions for testing
-
-import * as ion from '/Users/pcornell/dev/ion/ion-hash-js/ion-bundle.js';
-
+// TBD use uint8array instead of number[] ?
+// TBD use rewire to gain access to 'private' functions for testing
 // TBD should HashReader/HashWriter be interfaces that extend Reader/Writer?
-/*
-export interface HashReader extends Reader {
-    digest(): number[];
-}
 
-export interface HashWriter extends Writer {
-    digest(): number[];
-}
+//import * as ion from '/Users/pcornell/dev/ion/ion-hash-js/ion-bundle.js';
+import * as ion from '/Users/pcornell/dev/ion/ion-js/dist/browser/js/ion-bundle.js';
+import { Decimal } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonDecimal';
+import { IonType } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonType';
+import { IonTypes } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonTypes';
+import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonReader';
+import { Timestamp } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonTimestamp';
+import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonWriter';
+/*
+import { Decimal } from 'src/ion-js/src/IonDecimal.js';
+import { IonType } from 'src/ion-js/src/IonType.js';
+import { IonTypes } from 'src/ion-js/src/IonTypes.js';
+import { Reader as IonReader } from 'src/ion-js/src/IonReader.js';
+import { Timestamp } from 'src/ion-js/src/IonTimestamp.js';
+import { Writer as IonWriter }from 'src/ion-js/src/IonWriter.js';
+*/
+/*
+import { Decimal } from 'src/ion-js/src/IonDecimal';
+import { IonType } from 'src/ion-js/src/IonType';
+import { IonTypes } from 'src/ion-js/src/IonTypes';
+import { Reader as IonReader } from 'src/ion-js/src/IonReader';
+import { Timestamp } from 'src/ion-js/src/IonTimestamp';
+import { Writer as IonWriter }from 'src/ion-js/src/IonWriter';
 */
 
-export function HashReaderImpl(reader, hashFunctionProvider) {
-    let hasher = new Hasher(hashFunctionProvider);
-    return {
-        booleanValue:   () => { reader.booleanValue() },
-        byteValue:      () => { reader.byteValue() },
-        decimalValue:   () => { reader.decimalValue() },
-        depth:          () => { reader.depth() },
-        fieldName:      () => { reader.fieldName() },
-        isNull:         () => { reader.isNull() },
-        next:           () => { reader.next() },
-        numberValue:    () => { reader.numberValue() },
-        stepIn:         () => { reader.stepIn() },
-        stepOut:        () => { reader.stepOut() },
-        stringValue:    () => { reader.stringValue() },
-        timestampValue: () => { reader.timestampValue() },
-        value:          () => { reader.value() },
-        annotations:    () => { reader.annotations() },
-
-        digest:         () => { return "digest bytes" },
-    };
+export interface HashReader extends IonReader {
+    digest(): number[];
 }
 
+export interface HashWriter extends IonWriter {
+    digest(): number[];
+}
+
+interface TypedValue {
+    type(): IonType;
+    value(): any;
+}
+
+export function hashReader(reader, hashFunctionProvider) {
+    return new HashReaderImpl(reader, hashFunctionProvider);
+}
+
+class HashReaderImpl implements HashReader, TypedValue {
+    private readonly reader: IonReader;
+    private readonly hashFunctionProvider;
+
+    private readonly hasher: Hasher;
+    private ionType: IonType;
+
+    constructor(reader, hashFunctionProvider) {
+        this.reader = reader;
+        this.hashFunctionProvider = hashFunctionProvider;
+        this.hasher = new Hasher(hashFunctionProvider);
+    }
+
+    annotations()   : string[]  { return this.reader.annotations() }
+    booleanValue()  : boolean   { return this.reader.booleanValue() }
+    byteValue()     : number[]  { return this.reader.byteValue() }
+    decimalValue()  : Decimal   { return this.reader.decimalValue() }
+    depth()         : number    { return this.reader.depth() }
+    fieldName()     : string    { return this.reader.fieldName() }
+    isNull()        : boolean   { return this.reader.isNull() }
+    next()          : IonType   {
+        this.ionType = this.reader.next();
+        this.hasher.scalar(this.ionType, this.value());
+        return this.ionType;
+    }
+    numberValue()   : number    { return this.reader.numberValue() }
+    stepIn()        : void      { this.reader.stepIn() }
+    stepOut()       : void      { this.reader.stepOut() }
+    stringValue()   : string    { return this.reader.stringValue() }
+    timestampValue(): Timestamp { return this.reader.timestampValue() }
+    value()         : any       { return this.reader.value() }
+
+    digest(): number[] { return this.hasher.digest() }
+    type(): IonType { return this.ionType }
+}
+
+/*
 export function HashWriterImpl(writer, hashFunctionProvider) {
     return {
         writeBlob:      (value: number[], annotations?: string[])   => { writer.writeBlob(value, annotations) },
@@ -62,14 +107,15 @@ export function HashWriterImpl(writer, hashFunctionProvider) {
         digest:         () => { return "digest bytes" },
     };
 }
+ */
 
-interface IonHasherProvider {
+export interface IonHasherProvider {
     (): IonHasher;
 }
 
-interface IonHasher {
+export interface IonHasher {
     update(bytes): void;
-    digest(): Array<number>;
+    digest(): number[];
 }
 
 class IdentityIonHasher implements IonHasher {
@@ -80,9 +126,9 @@ class IdentityIonHasher implements IonHasher {
 
 
 class Hasher {
-    private ihp: IonHasherProvider;
-    private currentHasher: Hasher;
-    private hasherStack: Hasher[] = [];
+    private readonly ihp: IonHasherProvider;
+    private currentHasher: Serializer;
+    private readonly hasherStack: Serializer[] = [];
 
     constructor(ihp: IonHasherProvider) {
         this.ihp = ihp;
@@ -90,12 +136,8 @@ class Hasher {
         this.hasherStack.push(this.currentHasher);
     }
 
-    scalar(type, reader) {
-        let writer = ion.makeBinaryWriter();
-        serializers[type.name](reader, writer);
-        let bytes = writer.getBytes();
-        writer.close();
-        return bytes.slice(4);
+    scalar(type, value) {
+        this.currentHasher.scalar(type, value);
     }
 
     stepIn() {
@@ -104,12 +146,32 @@ class Hasher {
     stepOut() {
     }
 
-    digest(): Array<number> {
-        return undefined;
+    digest(): number[] {
+        if (this.depth() != 0) {
+            // TBD throw exception
+        }
+        return this.currentHasher.digest();
+    }
+
+    private depth(): number {
+        return this.hasherStack.length - 1;
     }
 }
 
 class Serializer {
+    private static readonly serializers = {
+        "null":      (value, writer) => { writer.writeNull() },
+        "bool":      (value, writer) => { writer.writeBoolean(value) },
+        "int":       (value, writer) => { writer.writeInt(value) },
+        "float":     (value, writer) => { writer.writeNull() },
+        "decimal":   (value, writer) => { writer.writeDecimal(value) },
+        "timestamp": (value, writer) => { writer.writeTimestamp(value) },
+        "symbol":    (value, writer) => { writer.writeSymbol(value) },
+        "string":    (value, writer) => { writer.writeString(value) },
+        "clob":      (value, writer) => { writer.writeClob(value) },
+        "blob":      (value, writer) => { writer.writeBlob(value) },
+    };
+
     private hashFunction: IonHasher;
     private hasContainerAnnotations = false;
     private depth: number;
@@ -160,25 +222,38 @@ class Serializer {
             self._update(_escape(representation))
         self._end_marker()
     }
-
-    def scalar(ion_event) {
-        self._handle_annotations_begin(ion_event)
-        self._begin_marker()
-        scalar_bytes = _serializer(ion_event)(ion_event)
-            [tq, representation] = _scalar_or_null_split_parts(ion_event.ion_type, scalar_bytes)
-        self._update(bytes([tq]))
-        if len(representation) > 0:
-            self._update(_escape(representation))
-        self._end_marker()
-        self._handle_annotations_end(ion_event)
-    }
     */
+
+    private getBytes(type, value) {
+        if (value != undefined) {
+            let writer = ion.makeBinaryWriter();
+            Serializer.serializers[type.name](value, writer);
+            writer.close();
+            let bytes = writer.getBytes().slice(4);
+            return bytes;
+        }
+        return [];
+    }
+
+
+    scalar(type, value) {
+        //self._handle_annotations_begin(ion_event)
+        this.beginMarker();
+        let scalarBytes = this.getBytes(type, value);
+        this.update(scalarBytes);   // TBD remove
+        //[tq, representation] = _scalar_or_null_split_parts(ion_event.ion_type, scalar_bytes)
+        //self._update(bytes([tq]))
+        //if len(representation) > 0:
+            //self._update(_escape(representation))
+        this.endMarker();
+        //self._handle_annotations_end(ion_event)
+    }
 
     stepIn(ion_event) {
         //this.handleFieldName(ion_event);
         //this.handleAnnotationsBegin(ion_event, True);
         this.beginMarker();
-        this.update(bytes([_TQ[ion_event.ion_type]]));
+        this.update(TQ[ion_event.ion_type]);
     }
 
     stepOut() {
@@ -195,13 +270,13 @@ class StructSerializer extends Serializer {
 
     constructor(hashFunction, depth, hashFunctionProvider) {
         super(hashFunction, depth);
-        this.scalarSerializer = Serializer(hashFunctionProvider(), depth + 1);
+        this.scalarSerializer = new Serializer(hashFunctionProvider(), depth + 1);
         this.fieldHashes = [];
     }
 
     scalar(ion_event) {
         //this.scalarSerializer.handleFieldName(ion_event);
-        this.scalarSerializer.scalar(ion_event);
+        //this.scalarSerializer.scalar(ion_event);
         let digest = this.scalarSerializer.digest();
         this.appendFieldHash(digest);
     }
@@ -220,18 +295,8 @@ class StructSerializer extends Serializer {
 }
 
 
-const serializers = {
-    "null":      (reader, writer) => { writer.writeNull(); },
-    "bool":      (reader, writer) => { writer.writeBoolean(reader.booleanValue()); },
-    "int":       (reader, writer) => { writer.writeInt(reader.numberValue()); },
-    "float":     (reader, writer) => { writer.writeNull(); },
-    "decimal":   (reader, writer) => { writer.writeDecimal(reader.numberValue()); },
-    "timestamp": (reader, writer) => { writer.writeTimestamp(reader.timestampValue()); },
-    "symbol":    (reader, writer) => { writer.writeSymbol(reader.stringValue()); },
-    "string":    (reader, writer) => { writer.writeString(reader.stringValue()); },
-    "clob":      (reader, writer) => { writer.writeClob(reader.byteValue()); },
-    "blob":      (reader, writer) => { writer.writeBlob(reader.byteValue()); },
-};
+
+/*
 function serializeNextValue(reader, type): number[] {
     let writer = ion.makeBinaryWriter();
     serializers[type.name](reader, writer);
@@ -239,6 +304,7 @@ function serializeNextValue(reader, type): number[] {
     writer.close();
     return bytes.slice(4);
 }
+*/
 
 //let reader = ion.makeReader("null true 5 /*1.0e*/ 2.3 2000-01-01T hello \"hello\" /*{{\"hello\"}}*/ /*{{aGVsbG8=}}*/");
 //let type = reader.next();
@@ -279,6 +345,14 @@ const BEGIN_MARKER_BYTE = 0x0B;
 const END_MARKER_BYTE = 0x0E;
 const ESCAPE_BYTE = 0x0C;
 
+const TQ = {};
+for (let ionType in IonTypes) {
+    TQ[ionType] = IonTypes[ionType].bid << 4;
+}
+const TQ_SYMBOL_SID0 = 0x71;
+const TQ_ANNOTATED_VALUE = 0xE0;
+
+
 export function escape(bytes) {
     bytes.forEach((b) => {
         if (b == BEGIN_MARKER_BYTE || b == END_MARKER_BYTE || b == ESCAPE_BYTE) {
@@ -295,5 +369,23 @@ export function escape(bytes) {
         }
     });
     return bytes;
+}
+
+
+
+
+// TBD remove
+let write = function (s) {
+    process.stdout.write(s);
+};
+
+let writeln = function (s = "") {
+    write(s + "\n");
+};
+
+function toHexString(byteArray) {
+    return Array.from(byteArray, function(b) {
+        return ('0' + ((b as number) & 0xFF).toString(16)).slice(-2);
+    }).join(' ')
 }
 
