@@ -41,8 +41,8 @@ define([
                     case ion.IonTypes.DECIMAL:   { writer.writeDecimal(reader.decimalValue(), reader.annotations()); break }
                     case ion.IonTypes.TIMESTAMP: { writer.writeTimestamp(reader.timestampValue(), reader.annotations()); break }
                     case ion.IonTypes.SYMBOL:    { writer.writeSymbol(reader.stringValue(), reader.annotations()); break }
-                    case ion.IonTypes.STRING:    { writer.writeSymbol(reader.stringValue(), reader.annotations()); break }
-                    case ion.IonTypes.CLOB:      { writer.writeClob(reader.stringValue(), reader.annotations()); break }
+                    case ion.IonTypes.STRING:    { writer.writeString(reader.stringValue(), reader.annotations()); break }
+                    case ion.IonTypes.CLOB:      { writer.writeClob(reader.value(), reader.annotations()); break }
                     case ion.IonTypes.BLOB:      { writer.writeBlob([1,2,3] /* TBD reader.byteValue()*/, reader.annotations()); break }
                     case ion.IonTypes.LIST:      { writer.writeList(reader.annotations()); break }
                     case ion.IonTypes.SEXP:      { writer.writeSexp(reader.annotations()); break }

@@ -279,6 +279,11 @@ class Serializer {
             scalarBytes = this.getBytes(type, value);
         }
         let [tq, representation] = this.scalarOrNullSplitParts(type, scalarBytes);
+
+        if (type.name == 'symbol') { // TBD  == ion.IonTypes.SYMBOL) {
+            tq = 0x70;
+        }
+
         this.update(tq);
         if (representation.length > 0) {
             this.update(escape(representation));
