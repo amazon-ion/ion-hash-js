@@ -128,18 +128,29 @@ define([
             reader.stepIn();
             for (let type; type = reader.next(); ) {
                 let annotation = reader.annotations()[0];
-                if (annotation == 'digest') {
+                if (annotation == 'digest' || annotation == 'final_digest') {
                     expectedDigest = util.toHexString(sexpToBytes(reader));
                     break;
                 }
             }
 
             let hashReader = ionhash.hashReader(ion.makeReader(ionStr), testIonHasherProvider);
-            hashReader.next();
+            traverse(hashReader);
+            //hashReader.next();
             let actualDigest = util.toHexString(hashReader.digest());
 
             assert.equal(actualDigest, expectedDigest);
         };
+
+        function traverse(reader) {
+            for (let type; type = reader.next(); ) {
+                if (type.container && !reader.isNull()) {
+                    reader.stepIn();
+                    traverse(reader);
+                    reader.stepOut();
+                }
+            }
+        }
 
         function sexpToBytes(reader): number[] {
             let bytes: number[] = [];

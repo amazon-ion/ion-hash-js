@@ -69,13 +69,23 @@ class HashReaderImpl implements HashReader, TypedValue {
     next()          : IonType   {
         this.ionType = this.reader.next();
         if (this.ionType != undefined) {
-            this.hasher.scalar(this.ionType, this.value(), this.isNull());
+            //writeln('next.ionType: ' + this.ionType.name);
+            if (!this.ionType.container) {
+                this.hasher.scalar(this.ionType, this.value(), this.isNull());
+            }
         }
         return this.ionType;
     }
     numberValue()   : number    { return this.reader.numberValue() }
-    stepIn()        : void      { this.reader.stepIn() }
-    stepOut()       : void      { this.reader.stepOut() }
+    stepIn()        : void      {
+        //writeln('stepIn.ionType: ' + this.ionType.name);
+        this.hasher.stepIn(this.ionType);
+        this.reader.stepIn();
+    }
+    stepOut()       : void      {
+        this.reader.stepOut();
+        this.hasher.stepOut();
+    }
     stringValue()   : string    { return this.reader.stringValue() }
     timestampValue(): Timestamp { return this.reader.timestampValue() }
     value()         : any       { return this.reader.value() }
@@ -145,10 +155,35 @@ class Hasher {
         this.currentHasher.scalar(type, value, isNull);
     }
 
-    stepIn() {
+    stepIn(type) {
+        let hf = this.currentHasher.hashFunction;
+        if (this.currentHasher instanceof StructSerializer) {
+            hf = this.ihp();
+        }
+
+        if (type.name == 'struct') {   // TBD
+            this.currentHasher = new StructSerializer(hf, this.depth(), this.ihp);
+        } else {
+            this.currentHasher = new Serializer(hf, this.depth());
+        }
+
+        this.hasherStack.push(this.currentHasher);
+        this.currentHasher.stepIn(type);
     }
 
     stepOut() {
+        if (this.depth() == 0) {
+            throw new Error("Hasher cannot stepOut any further");
+        }
+
+        this.currentHasher.stepOut();
+        let poppedHasher = this.hasherStack.pop();
+        this.currentHasher = this.hasherStack[this.hasherStack.length - 1];
+
+        if (this.currentHasher instanceof StructSerializer) {
+            let digest = poppedHasher.digest();
+            this.currentHasher.appendFieldHash(digest);
+        }
     }
 
     digest(): number[] {
@@ -177,7 +212,7 @@ class Serializer {
         "blob":      (value, writer) => { writer.writeBlob(value) },
     };
 
-    private hashFunction: IonHasher;
+    hashFunction: IonHasher;
     private hasContainerAnnotations = false;
     private depth: number;
 
@@ -286,17 +321,21 @@ class Serializer {
 
         this.update(tq);
         if (representation.length > 0) {
-            this.update(escape(representation));
+            //writeln('pre  escape:' + toHexString(representation));
+            let repr2 = escape(representation);
+            //writeln('post escape:' + toHexString(repr2));
+            this.update(repr2);
+            //this.update(escape(representation));
         }
         this.endMarker();
         //self._handle_annotations_end(ion_event)
     }
 
-    stepIn(ion_event) {
+    stepIn(type) {
         //this.handleFieldName(ion_event);
         //this.handleAnnotationsBegin(ion_event, True);
         this.beginMarker();
-        this.update(TQ[ion_event.ion_type]);
+        this.update(TQ[type.name.toUpperCase()]);   // TBD  rationalize this
     }
 
     stepOut() {
@@ -397,21 +436,27 @@ const TQ_ANNOTATED_VALUE = 0xE0;
 
 
 export function escape(bytes) {
+    let escapedBytes = bytes;
     bytes.forEach((b) => {
+        //writeln('escape: ' + b + ', ' + BEGIN_MARKER_BYTE + ',' + END_MARKER_BYTE + ',' + ESCAPE_BYTE);
         if (b == BEGIN_MARKER_BYTE || b == END_MARKER_BYTE || b == ESCAPE_BYTE) {
             // found a byte that needs to be escaped;  build a new byte array that
             // escapes that byte as well as any others
-            let escapedBytes = [];
+            escapedBytes = [];
             bytes.forEach((c) => {
+                //writeln('escape.c: ' + c + ', ' + BEGIN_MARKER_BYTE + ',' + END_MARKER_BYTE + ',' + ESCAPE_BYTE);
                 if (c == BEGIN_MARKER_BYTE || c == END_MARKER_BYTE || c == ESCAPE_BYTE) {
+                    //writeln('  escaping ' + c);
                     escapedBytes.push(ESCAPE_BYTE);
                 }
                 escapedBytes.push(c);
+                //writeln('escape.origbytes: ' + toHexString(bytes));
+                //writeln('escape.escapedBytes: ' + toHexString(escapedBytes));
             });
             return escapedBytes;
         }
     });
-    return bytes;
+    return escapedBytes;
 }
 
 
@@ -432,3 +477,6 @@ function toHexString(byteArray) {
     }).join(' ')
 }
 
+for (let tq in TQ) {
+    writeln('TQ[' + tq + '] = ' + TQ[tq]);
+}
