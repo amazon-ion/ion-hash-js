@@ -17,7 +17,7 @@ define([
             escape_multiple: () => { test([0x0c, 0x10, 0x0c, 0x11, 0x0c, 0x12, 0x0c], [0x0c, 0x0c, 0x10, 0x0c, 0x0c, 0x11, 0x0c, 0x0c, 0x12, 0x0c, 0x0c]); },
         };
 
-        let test = (actual, expected) => { assert(ionhash.escape(actual), expected); };
+        let test = (actual, expected) => { assert(ionhash.escape(actual), expected) };
     }
 );
 

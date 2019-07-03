@@ -36,6 +36,7 @@ export interface HashWriter extends IonWriter {
     digest(): number[];
 }
 
+// TBD is this adding any value?
 interface TypedValue {
     type(): IonType;
     value(): any;
@@ -120,11 +121,13 @@ export interface IonHasher {
     digest(): number[];
 }
 
+/*
 class IdentityIonHasher implements IonHasher {
     private bytes: number[] = [];
     update(b) { this.bytes.push(b) }
     digest() { return this.bytes }
 }
+*/
 
 
 class Hasher {
@@ -200,7 +203,7 @@ class Serializer {
     }
     */
 
-    handleAnnotationsEnd(ion_event, is_container /*=False*/) {
+    private handleAnnotationsEnd(ion_event, is_container /*=False*/) {
         /*
         if (ion_event is not None and len(ion_event.annotations) > 0) \
                 or (is_container and self._has_container_annotations):
@@ -210,9 +213,9 @@ class Serializer {
          */
     }
 
-    update(bytes) { this.hashFunction.update(bytes) }
-    beginMarker() { this.hashFunction.update(BEGIN_MARKER_BYTE) }
-    endMarker()   { this.hashFunction.update(END_MARKER_BYTE) }
+    protected update(bytes) { this.hashFunction.update(bytes) }
+    protected beginMarker() { this.hashFunction.update(BEGIN_MARKER_BYTE) }
+    protected endMarker()   { this.hashFunction.update(END_MARKER_BYTE) }
 
     /*
     private def _write_symbol(token) {
@@ -226,21 +229,12 @@ class Serializer {
     }
     */
 
-    private getNullBytes(type) {
-        let writer = ion.makeBinaryWriter();
-        writer.writeNull(type);
-        writer.close();
-        let bytes = writer.getBytes().slice(4);
-        return bytes;
-    }
-
     private getBytes(type, value) {
         if (value != undefined) {   // TBD is this needed?
             let writer = ion.makeBinaryWriter();
             Serializer.serializers[type.name](value, writer);
             writer.close();
-            let bytes = writer.getBytes().slice(4);
-            return bytes;
+            return writer.getBytes().slice(4);
         }
         return [];
     }
@@ -280,7 +274,7 @@ class Serializer {
         this.beginMarker();
         let scalarBytes;
         if (isNull) {
-            scalarBytes = this.getNullBytes(type);
+            scalarBytes = [type.bid << 4 | 0x0F];
         } else {
             scalarBytes = this.getBytes(type, value);
         }
