@@ -37,7 +37,9 @@ export interface HashWriter extends IonWriter {
 }
 
 // TBD is this adding any value?
-interface TypedValue {
+interface IonValue {
+    fieldName(): string;
+    isNull(): boolean;
     type(): IonType;
     value(): any;
 }
@@ -46,7 +48,7 @@ export function hashReader(reader, hashFunctionProvider) {
     return new HashReaderImpl(reader, hashFunctionProvider);
 }
 
-class HashReaderImpl implements HashReader, TypedValue {
+class HashReaderImpl implements HashReader, IonValue {
     private readonly reader: IonReader;
     private readonly hashFunctionProvider;
 
@@ -71,7 +73,7 @@ class HashReaderImpl implements HashReader, TypedValue {
         if (this.ionType != undefined) {
             //writeln('next.ionType: ' + this.ionType.name);
             if (!this.ionType.container) {
-                this.hasher.scalar(this.ionType, this.value(), this.isNull());
+                this.hasher.scalar(this);
             }
         }
         return this.ionType;
@@ -79,7 +81,7 @@ class HashReaderImpl implements HashReader, TypedValue {
     numberValue()   : number    { return this.reader.numberValue() }
     stepIn()        : void      {
         //writeln('stepIn.ionType: ' + this.ionType.name);
-        this.hasher.stepIn(this.ionType);
+        this.hasher.stepIn(this);
         this.reader.stepIn();
     }
     stepOut()       : void      {
@@ -151,24 +153,24 @@ class Hasher {
         this.hasherStack.push(this.currentHasher);
     }
 
-    scalar(type, value, isNull) {
-        this.currentHasher.scalar(type, value, isNull);
+    scalar(value: IonValue) {
+        this.currentHasher.scalar(value);
     }
 
-    stepIn(type) {
+    stepIn(value: IonValue) {
         let hf = this.currentHasher.hashFunction;
         if (this.currentHasher instanceof StructSerializer) {
             hf = this.ihp();
         }
 
-        if (type.name == 'struct') {   // TBD
+        if (value.type().name == 'struct') {   // TBD
             this.currentHasher = new StructSerializer(hf, this.depth(), this.ihp);
         } else {
             this.currentHasher = new Serializer(hf, this.depth());
         }
 
         this.hasherStack.push(this.currentHasher);
-        this.currentHasher.stepIn(type);
+        this.currentHasher.stepIn(value);
     }
 
     stepOut() {
@@ -221,12 +223,13 @@ class Serializer {
         this.depth = depth;
     }
 
-    /*
-    handleFieldName(ion_event) {
-        if ion_event.field_name is not None and self._depth > 0:
-            self._write_symbol(ion_event.field_name)
+    handleFieldName(fieldName) {
+        if (fieldName && this.depth > 0) {
+            this.writeSymbol(fieldName);
+        }
     }
 
+    /*
     handleAnnotationsBegin(ion_event, is_container=False) {
         if len(ion_event.annotations) > 0:
             self._begin_marker()
@@ -252,17 +255,38 @@ class Serializer {
     protected beginMarker() { this.hashFunction.update(BEGIN_MARKER_BYTE) }
     protected endMarker()   { this.hashFunction.update(END_MARKER_BYTE) }
 
-    /*
-    private def _write_symbol(token) {
-        self._begin_marker()
-        _bytes = _serialize_symbol_token(token)
-            [tq, representation] = _scalar_or_null_split_parts(IonType.SYMBOL, _bytes)
-        self._update(bytes([tq]))
-        if len(representation) > 0:
-            self._update(_escape(representation))
-        self._end_marker()
+    private writeSymbol(token) {
+        this.beginMarker();
+        /*
+        //if (token.sid == 0) {
+            //this.update(_TQ_SYMBOL_SID0);
+        //} else {
+            //this.update(TQ[IonTypes.SYMBOL]);
+            this.update(TQ['SYMBOL']);   // TBD fix
+        //}
+        if (token.length > 0) {
+            let bytes =
+            this.update(escape(token));
+        }
+         */
+
+
+        let scalarBytes = this.getBytes(IonTypes.SYMBOL, token);
+        let [tq, representation] = this.scalarOrNullSplitParts(IonTypes.SYMBOL, scalarBytes);
+        tq = TQ['SYMBOL'];  // TBD fix
+
+        /*
+        if (SID0) {
+            tq = TQ_SYMBOL_SID0;
+        }
+         */
+
+        this.update(tq);
+        if (representation.length > 0) {
+            this.update(escape(representation));
+        }
+        this.endMarker();
     }
-    */
 
     private getBytes(type, value) {
         if (value != undefined) {   // TBD is this needed?
@@ -304,38 +328,34 @@ class Serializer {
     }
 
 
-    scalar(type, value, isNull) {
+    scalar(value: IonValue) {
         //self._handle_annotations_begin(ion_event)
         this.beginMarker();
         let scalarBytes;
-        if (isNull) {
-            scalarBytes = [type.bid << 4 | 0x0F];
+        if (value.isNull()) {
+            scalarBytes = [value.type().bid << 4 | 0x0F];
         } else {
-            scalarBytes = this.getBytes(type, value);
+            scalarBytes = this.getBytes(value.type(), value.value());
         }
-        let [tq, representation] = this.scalarOrNullSplitParts(type, scalarBytes);
+        let [tq, representation] = this.scalarOrNullSplitParts(value.type(), scalarBytes);
 
-        if (type.name == 'symbol') { // TBD  == ion.IonTypes.SYMBOL) {
+        if (value.type().name == 'symbol') { // TBD  == ion.IonTypes.SYMBOL) {
             tq = 0x70;
         }
 
         this.update(tq);
         if (representation.length > 0) {
-            //writeln('pre  escape:' + toHexString(representation));
-            let repr2 = escape(representation);
-            //writeln('post escape:' + toHexString(repr2));
-            this.update(repr2);
-            //this.update(escape(representation));
+            this.update(escape(representation));
         }
         this.endMarker();
         //self._handle_annotations_end(ion_event)
     }
 
-    stepIn(type) {
-        //this.handleFieldName(ion_event);
+    stepIn(value: IonValue) {
+        this.handleFieldName(value.fieldName());
         //this.handleAnnotationsBegin(ion_event, True);
         this.beginMarker();
-        this.update(TQ[type.name.toUpperCase()]);   // TBD  rationalize this
+        this.update(TQ[value.type().name.toUpperCase()]);   // TBD  rationalize this
     }
 
     stepOut() {
@@ -356,15 +376,15 @@ class StructSerializer extends Serializer {
         this.fieldHashes = [];
     }
 
-    scalar(ion_event) {
-        //this.scalarSerializer.handleFieldName(ion_event);
-        //this.scalarSerializer.scalar(ion_event);
+    scalar(value) {
+        this.scalarSerializer.handleFieldName(value.fieldName());
+        this.scalarSerializer.scalar(value);
         let digest = this.scalarSerializer.digest();
         this.appendFieldHash(digest);
     }
 
     stepOut() {
-        //this.fieldHashes.sort(key = cmp_to_key(_bytearray_comparator));
+        this.fieldHashes.sort(byteArrayComparator);
         for (let digest of this.fieldHashes) {
             this.update(escape(digest));
         }
@@ -375,27 +395,6 @@ class StructSerializer extends Serializer {
         this.fieldHashes.push(digest);
     }
 }
-
-
-
-/*
-function serializeNextValue(reader, type): number[] {
-    let writer = ion.makeBinaryWriter();
-    serializers[type.name](reader, writer);
-    let bytes = writer.getBytes();
-    writer.close();
-    return bytes.slice(4);
-}
-*/
-
-//let reader = ion.makeReader("null true 5 /*1.0e*/ 2.3 2000-01-01T hello \"hello\" /*{{\"hello\"}}*/ /*{{aGVsbG8=}}*/");
-//let type = reader.next();
-//while (type) {
-//    let bytes = serializeNextValue(reader, type);
-//    writeln(reader.value() + ": " + toHexString(bytes));
-//    type = reader.next();
-//}
-//writeln();
 
 
 export function byteArrayComparator(a: number[], b: number[]) {
@@ -477,6 +476,9 @@ function toHexString(byteArray) {
     }).join(' ')
 }
 
+/*
 for (let tq in TQ) {
     writeln('TQ[' + tq + '] = ' + TQ[tq]);
 }
+
+ */

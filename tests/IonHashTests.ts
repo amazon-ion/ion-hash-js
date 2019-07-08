@@ -18,7 +18,11 @@ define([
                     this.allBytes.push(b);
                 });
             }
-            digest() { return this.allBytes }
+            digest() {
+                let digest = this.allBytes;
+                this.allBytes = [];
+                return digest;
+            }
         };
 
         function testIonHasherProvider() {
@@ -130,7 +134,6 @@ define([
                 let annotation = reader.annotations()[0];
                 if (annotation == 'digest' || annotation == 'final_digest') {
                     expectedDigest = util.toHexString(sexpToBytes(reader));
-                    break;
                 }
             }
 
