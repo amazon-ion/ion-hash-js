@@ -3,7 +3,6 @@
 // TBD use rewire to gain access to 'private' functions for testing
 // TBD should HashReader/HashWriter be interfaces that extend Reader/Writer?
 
-//import * as ion from '/Users/pcornell/dev/ion/ion-hash-js/ion-bundle.js';
 import * as ion from '/Users/pcornell/dev/ion/ion-js/dist/browser/js/ion-bundle.js';
 import { Decimal } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonDecimal';
 import { IonType } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonType';
@@ -11,22 +10,6 @@ import { IonTypes } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonTypes';
 import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonReader';
 import { Timestamp } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonTimestamp';
 import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js/dist/amd/es6/IonWriter';
-/*
-import { Decimal } from 'src/ion-js/src/IonDecimal.js';
-import { IonType } from 'src/ion-js/src/IonType.js';
-import { IonTypes } from 'src/ion-js/src/IonTypes.js';
-import { Reader as IonReader } from 'src/ion-js/src/IonReader.js';
-import { Timestamp } from 'src/ion-js/src/IonTimestamp.js';
-import { Writer as IonWriter }from 'src/ion-js/src/IonWriter.js';
-*/
-/*
-import { Decimal } from 'src/ion-js/src/IonDecimal';
-import { IonType } from 'src/ion-js/src/IonType';
-import { IonTypes } from 'src/ion-js/src/IonTypes';
-import { Reader as IonReader } from 'src/ion-js/src/IonReader';
-import { Timestamp } from 'src/ion-js/src/IonTimestamp';
-import { Writer as IonWriter }from 'src/ion-js/src/IonWriter';
-*/
 
 export interface HashReader extends IonReader {
     digest(): number[];
@@ -36,7 +19,6 @@ export interface HashWriter extends IonWriter {
     digest(): number[];
 }
 
-// TBD is this adding any value?
 interface IonValue {
     annotations(): string[];
     fieldName(): string;
@@ -69,7 +51,12 @@ class HashReaderImpl implements HashReader, IonValue {
     depth()         : number    { return this.reader.depth() }
     fieldName()     : string    { return this.reader.fieldName() }
     isNull()        : boolean   { return this.reader.isNull() }
-    next()          : IonType   {
+    numberValue()   : number    { return this.reader.numberValue() }
+    stringValue()   : string    { return this.reader.stringValue() }
+    timestampValue(): Timestamp { return this.reader.timestampValue() }
+    value()         : any       { return this.reader.value() }
+
+    next(): IonType {
         this.ionType = this.reader.next();
         if (this.ionType != undefined) {
             //writeln('next.ionType: ' + this.ionType.name);
@@ -79,22 +66,25 @@ class HashReaderImpl implements HashReader, IonValue {
         }
         return this.ionType;
     }
-    numberValue()   : number    { return this.reader.numberValue() }
-    stepIn()        : void      {
+
+    stepIn() {
         //writeln('stepIn.ionType: ' + this.ionType.name);
         this.hasher.stepIn(this);
         this.reader.stepIn();
     }
-    stepOut()       : void      {
+
+    stepOut() {
         this.reader.stepOut();
         this.hasher.stepOut();
     }
-    stringValue()   : string    { return this.reader.stringValue() }
-    timestampValue(): Timestamp { return this.reader.timestampValue() }
-    value()         : any       { return this.reader.value() }
 
-    digest(): number[] { return this.hasher.digest() }
-    type(): IonType { return this.ionType }
+    digest(): number[] {
+        return this.hasher.digest();
+    }
+
+    type(): IonType {
+        return this.ionType;
+    }
 }
 
 /*
@@ -134,15 +124,6 @@ export interface IonHasher {
     digest(): number[];
 }
 
-/*
-class IdentityIonHasher implements IonHasher {
-    private bytes: number[] = [];
-    update(b) { this.bytes.push(b) }
-    digest() { return this.bytes }
-}
-*/
-
-
 class Hasher {
     private readonly ihp: IonHasherProvider;
     private currentHasher: Serializer;
@@ -154,24 +135,24 @@ class Hasher {
         this.hasherStack.push(this.currentHasher);
     }
 
-    scalar(value: IonValue) {
-        this.currentHasher.scalar(value);
+    scalar(ionValue: IonValue) {
+        this.currentHasher.scalar(ionValue);
     }
 
-    stepIn(value: IonValue) {
+    stepIn(ionValue: IonValue) {
         let hf = this.currentHasher.hashFunction;
         if (this.currentHasher instanceof StructSerializer) {
             hf = this.ihp();
         }
 
-        if (value.type().name == 'struct') {   // TBD
+        if (ionValue.type().name == 'struct') {   // TBD
             this.currentHasher = new StructSerializer(hf, this.depth(), this.ihp);
         } else {
             this.currentHasher = new Serializer(hf, this.depth());
         }
 
         this.hasherStack.push(this.currentHasher);
-        this.currentHasher.stepIn(value);
+        this.currentHasher.stepIn(ionValue);
     }
 
     stepOut() {
@@ -230,8 +211,8 @@ class Serializer {
         }
     }
 
-    private handleAnnotationsBegin(value, isContainer=false) {
-        let annotations = value.annotations();
+    private handleAnnotationsBegin(ionValue, isContainer=false) {
+        let annotations = ionValue.annotations();
         if (annotations.length > 0) {
             this.beginMarker();
             this.update(TQ_ANNOTATED_VALUE);
@@ -244,8 +225,8 @@ class Serializer {
         }
     }
 
-    private handleAnnotationsEnd(value, isContainer=false) {
-        if ((value && value.annotations().length > 0)
+    private handleAnnotationsEnd(ionValue, isContainer=false) {
+        if ((ionValue && ionValue.annotations().length > 0)
                 || (isContainer && this.hasContainerAnnotations)) {
             this.endMarker();
             if (isContainer) {
@@ -260,19 +241,6 @@ class Serializer {
 
     private writeSymbol(token) {
         this.beginMarker();
-        /*
-        //if (token.sid == 0) {
-            //this.update(_TQ_SYMBOL_SID0);
-        //} else {
-            //this.update(TQ[IonTypes.SYMBOL]);
-            this.update(TQ['SYMBOL']);   // TBD fix
-        //}
-        if (token.length > 0) {
-            let bytes =
-            this.update(escape(token));
-        }
-         */
-
 
         let scalarBytes = this.getBytes(IonTypes.SYMBOL, token);
         let [tq, representation] = this.scalarOrNullSplitParts(IonTypes.SYMBOL, scalarBytes);
@@ -331,18 +299,18 @@ class Serializer {
     }
 
 
-    scalar(value: IonValue) {
-        this.handleAnnotationsBegin(value);
+    scalar(ionValue: IonValue) {
+        this.handleAnnotationsBegin(ionValue);
         this.beginMarker();
         let scalarBytes;
-        if (value.isNull()) {
-            scalarBytes = [value.type().bid << 4 | 0x0F];
+        if (ionValue.isNull()) {
+            scalarBytes = [ionValue.type().bid << 4 | 0x0F];
         } else {
-            scalarBytes = this.getBytes(value.type(), value.value());
+            scalarBytes = this.getBytes(ionValue.type(), ionValue.value());
         }
-        let [tq, representation] = this.scalarOrNullSplitParts(value.type(), scalarBytes);
+        let [tq, representation] = this.scalarOrNullSplitParts(ionValue.type(), scalarBytes);
 
-        if (value.type().name == 'symbol') { // TBD  == ion.IonTypes.SYMBOL) {
+        if (ionValue.type().name == 'symbol') { // TBD  == ion.IonTypes.SYMBOL) {
             tq = 0x70;
         }
 
@@ -351,14 +319,14 @@ class Serializer {
             this.update(escape(representation));
         }
         this.endMarker();
-        this.handleAnnotationsEnd(value);
+        this.handleAnnotationsEnd(ionValue);
     }
 
-    stepIn(value: IonValue) {
-        this.handleFieldName(value.fieldName());
-        this.handleAnnotationsBegin(value, true);
+    stepIn(ionValue: IonValue) {
+        this.handleFieldName(ionValue.fieldName());
+        this.handleAnnotationsBegin(ionValue, true);
         this.beginMarker();
-        this.update(TQ[value.type().name.toUpperCase()]);   // TBD  rationalize this
+        this.update(TQ[ionValue.type().name.toUpperCase()]);   // TBD  rationalize this
     }
 
     stepOut() {
