@@ -38,6 +38,7 @@ export interface HashWriter extends IonWriter {
 
 // TBD is this adding any value?
 interface IonValue {
+    annotations(): string[];
     fieldName(): string;
     isNull(): boolean;
     type(): IonType;
@@ -229,26 +230,28 @@ class Serializer {
         }
     }
 
-    /*
-    handleAnnotationsBegin(ion_event, is_container=False) {
-        if len(ion_event.annotations) > 0:
-            self._begin_marker()
-        self.hash_function.update(_TQ_ANNOTATED_VALUE)
-        for annotation in ion_event.annotations:
-            self._write_symbol(annotation)
-        if is_container:
-            self._has_container_annotations = True
+    private handleAnnotationsBegin(value, isContainer=false) {
+        let annotations = value.annotations();
+        if (annotations.length > 0) {
+            this.beginMarker();
+            this.update(TQ_ANNOTATED_VALUE);
+            for (let annotation of annotations) {
+                this.writeSymbol(annotation);
+            }
+            if (isContainer) {
+                this.hasContainerAnnotations = true;
+            }
+        }
     }
-    */
 
-    private handleAnnotationsEnd(ion_event, is_container /*=False*/) {
-        /*
-        if (ion_event is not None and len(ion_event.annotations) > 0) \
-                or (is_container and self._has_container_annotations):
-        self._end_marker()
-        if is_container:
-            self._has_container_annotations = False
-         */
+    private handleAnnotationsEnd(value, isContainer=false) {
+        if ((value && value.annotations().length > 0)
+                || (isContainer && this.hasContainerAnnotations)) {
+            this.endMarker();
+            if (isContainer) {
+                this.hasContainerAnnotations = false;
+            }
+        }
     }
 
     protected update(bytes) { this.hashFunction.update(bytes) }
@@ -329,7 +332,7 @@ class Serializer {
 
 
     scalar(value: IonValue) {
-        //self._handle_annotations_begin(ion_event)
+        this.handleAnnotationsBegin(value);
         this.beginMarker();
         let scalarBytes;
         if (value.isNull()) {
@@ -348,12 +351,12 @@ class Serializer {
             this.update(escape(representation));
         }
         this.endMarker();
-        //self._handle_annotations_end(ion_event)
+        this.handleAnnotationsEnd(value);
     }
 
     stepIn(value: IonValue) {
         this.handleFieldName(value.fieldName());
-        //this.handleAnnotationsBegin(ion_event, True);
+        this.handleAnnotationsBegin(value, true);
         this.beginMarker();
         this.update(TQ[value.type().name.toUpperCase()]);   // TBD  rationalize this
     }
