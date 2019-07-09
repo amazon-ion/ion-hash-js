@@ -10,13 +10,14 @@ define([
     function(intern, registerSuite, assert, fs, ion, ionhash, util) {
         class IdentityIonHasher implements ionhash.IonHasher {
             private allBytes: number[] = [];
-            update(bytes) {
-                if (!(bytes instanceof Array)) {
-                    bytes = [bytes];
+            update(bytes: number | Uint8Array) {
+                if (bytes['forEach'] != undefined) {
+                    bytes.forEach((b) => {
+                        this.allBytes.push(b);
+                    });
+                } else {
+                    this.allBytes.push(bytes);
                 }
-                bytes.forEach((b) => {
-                    this.allBytes.push(b);
-                });
             }
             digest() {
                 let digest = this.allBytes;
@@ -75,6 +76,7 @@ define([
         let suite = { name: 'IonHashTests' };
 
         let ionTests = fs.readFileSync('tests/ion_hash_tests.ion', 'utf8');
+        //let ionTests = fs.readFileSync('tests/test.ion', 'utf8');
         let testCount = 0;
         let reader = ion.makeReader(ionTests);
         for (let type; type = reader.next(); ) {
