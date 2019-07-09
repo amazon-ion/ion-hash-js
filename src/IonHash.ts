@@ -249,7 +249,7 @@ class Serializer {
     }
 
     handleFieldName(fieldName) {
-        if (fieldName && this.depth > 0) {
+        if (fieldName != undefined && this.depth > 0) {
             this.writeSymbol(fieldName);
         }
     }
