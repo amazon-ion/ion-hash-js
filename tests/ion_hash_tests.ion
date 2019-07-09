@@ -187,12 +187,14 @@ intLength512::{
 { ion: 0d-1,     expect:{ identity:(update::(0x0b) update::(0x50) update::(                0xc1) update::(0x0e) digest::(0x0b 0x50                 0xc1 0x0e)) } }
 { ion: 0d5,      expect:{ identity:(update::(0x0b) update::(0x50) update::(                0x85) update::(0x0e) digest::(0x0b 0x50                 0x85 0x0e)) } }
 { ion: 0d-5,     expect:{ identity:(update::(0x0b) update::(0x50) update::(                0xc5) update::(0x0e) digest::(0x0b 0x50                 0xc5 0x0e)) } }
+/*
 { ion:-0d0,      expect:{ identity:(update::(0x0b) update::(0x50) update::(0x80            0x80) update::(0x0e) digest::(0x0b 0x50 0x80            0x80 0x0e)) } }
 { ion:-0d-0,     expect:{ identity:(update::(0x0b) update::(0x50) update::(0x80            0x80) update::(0x0e) digest::(0x0b 0x50 0x80            0x80 0x0e)) } }
 { ion:-0d1,      expect:{ identity:(update::(0x0b) update::(0x50) update::(0x81            0x80) update::(0x0e) digest::(0x0b 0x50 0x81            0x80 0x0e)) } }
 { ion:-0d-1,     expect:{ identity:(update::(0x0b) update::(0x50) update::(0xc1            0x80) update::(0x0e) digest::(0x0b 0x50 0xc1            0x80 0x0e)) } }
 { ion:-0d5,      expect:{ identity:(update::(0x0b) update::(0x50) update::(0x85            0x80) update::(0x0e) digest::(0x0b 0x50 0x85            0x80 0x0e)) } }
 { ion:-0d-5,     expect:{ identity:(update::(0x0b) update::(0x50) update::(0xc5            0x80) update::(0x0e) digest::(0x0b 0x50 0xc5            0x80 0x0e)) } }
+*/
 
 { ion: 0.012345, expect:{ identity:(update::(0x0b) update::(0x50) update::(0xc6       0x30 0x39) update::(0x0e) digest::(0x0b 0x50 0xc6       0x30 0x39 0x0e)) } }
 { ion: 0.12345,  expect:{ identity:(update::(0x0b) update::(0x50) update::(0xc5       0x30 0x39) update::(0x0e) digest::(0x0b 0x50 0xc5       0x30 0x39 0x0e)) } }
@@ -526,7 +528,6 @@ clobLength128::{
 // /clobs
 
 // blobs
-/*
 { ion:{{}}, expect:{ identity:(update::(0x0b) update::(0xa0) update::(0x0e) digest::(0x0b 0xa0 0x0e)) } }
 {
   ion:{{aGVsbG8=}},               // % echo -n "hello" | base64
@@ -597,7 +598,6 @@ blobLength128::{
              0x0e)
   ) }
 }
-*/
 // /blobs
 
 // lists
@@ -888,9 +888,7 @@ sexpCount128::{
 // /sexps
 
 // structs
-/*
 { ion:{}, expect:{ identity:(update::(0x0b) update::(0xd0) update::(0x0e) digest::(0x0b 0xd0 0x0e)) } }
-*/
 /*
 {
   ion:{$0:1},              // SID0
@@ -905,7 +903,6 @@ sexpCount128::{
   ) }
 }
 */
-/*
 {
   ion:{'':1},              // empty symbol
   expect:{ identity:(
@@ -918,7 +915,6 @@ sexpCount128::{
     digest::(0x0b 0xd0 0x0c 0x0b 0x70 0x0c 0x0e 0x0c 0x0b 0x20 0x01 0x0c 0x0e 0x0e)
   ) }
 }
-*/
 { ion:{hellohellohel: 1},
   expect:{ identity:(
     update::(0x0b) update::(0xd0)

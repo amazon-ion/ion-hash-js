@@ -3,11 +3,82 @@ define([
         'intern!object',
         'intern/chai!assert',
         'intern/dojo/node!fs',
-        'ion-bundle',
+        '/Users/pcornell/dev/ion/ion-js.development/dist/browser/js/ion-bundle',
         'dist/amd/es6/IonHash',
         'dist/amd/es6/util',
     ],
     function(intern, registerSuite, assert, fs, ion, ionhash, util) {
+        /*
+        let reader = ion.makeReader(
+            'null null.null null.bool null.int null.float null.decimal null.timestamp'
+            + ' null.symbol null.string null.clob null.blob null.list null.sexp null.struct'
+            + ' false 5 5e0 5d0 2017T hi "hi" {{"hi"}} {{aGVsbGB=}} [] () {}'
+            + ' 0 -0 0e0 -0e0 0d0 -0d0'
+        );
+        util.writeln('isNull: ' + reader.isNull());
+        for (let type; type = reader.next(); ) {
+            let value;
+            try {
+                value = reader.value();
+            } catch (e) {
+                util.writeln('  ' + e);
+            }
+            util.writeln('type: ' + type.name + ', isNull: ' + reader.isNull() + ', value: ' + value + ',  sign: ' + Math.sign(value));
+        }
+        util.writeln('isNull: ' + reader.isNull());
+         */
+
+
+        /*
+        let s = '0.d1 0.d5';
+        reader = ion.makeReader(s);
+        for (let t; t = reader.next(); ) {
+            let writer = ion.makeBinaryWriter();
+            writer.writeFloat64(reader.value());
+            writer.writeFloat64(0);
+            writer.writeFloat64(0.0);
+            writer.writeFloat64(0.00000);
+
+            util.writeln(s + ': ' + util.toHexString(writer.getBytes().slice(4));
+        }
+        */
+
+
+        /*
+        let dec = new ion.Decimal(0, 5);
+        let writer = ion.makeBinaryWriter();
+        writer.writeDecimal(dec);
+        writer.close();
+         */
+
+        /*
+        let writer = ion.makeBinaryWriter();
+        //writer.writeDecimal(0);
+        writer.writeDecimal(ion.Decimal.parse("0.00000"));
+        writer.close();
+        util.writeln('0: ' + util.toHexString(writer.getBytes().slice(4));
+         */
+
+        /*
+        let writer = ion.makeTextWriter();
+        writer.writeTimestamp(ion.Timestamp.parse("2017-01-01T00:00:00Z"));
+        writer.close();
+        let str = String.fromCharCode.apply(null, writer.getBytes());
+        util.writeln('timestamp: ' + str);
+         */
+
+        /*
+        let writer = ion.makeTextWriter();
+        writer.writeStruct();
+        writer.writeFieldName("null");
+        writer.writeInt(5);
+        writer.endContainer();
+        writer.close();
+        util.writeln(String.fromCharCode.apply(null, writer.getBytes()));
+         */
+
+        //return;
+
         class IdentityIonHasher implements ionhash.IonHasher {
             private allBytes: number[] = [];
             update(bytes: number | Uint8Array) {
