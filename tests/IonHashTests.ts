@@ -76,7 +76,6 @@ define([
         let suite = { name: 'IonHashTests' };
 
         let ionTests = fs.readFileSync('tests/ion_hash_tests.ion', 'utf8');
-        //let ionTests = fs.readFileSync('tests/test.ion', 'utf8');
         let testCount = 0;
         let reader = ion.makeReader(ionTests);
         for (let type; type = reader.next(); ) {

@@ -71,15 +71,16 @@ class HashReaderImpl implements HashReader, IonValue {
     value()         : any       { return this.reader.value() }
 
     next(): IonType {
+        if (this.ionType && this.ionType.container) {
+            // caller is nexting past a container;  hashing requires full/deep traversal
+            this.hasher.stepIn(this);
+            // TBD traverse nested data...
+            this.hasher.stepOut();
+        }
+
         this.ionType = this.reader.next();
-        if (this.ionType != undefined) {
-            if (this.ionType.container) {
-                this.hasher.stepIn(this);
-                // TBD traverse nested data...
-                this.hasher.stepOut();
-            } else {
-                this.hasher.scalar(this);
-            }
+        if (this.ionType && this.ionType.scalar) {
+            this.hasher.scalar(this);
         }
         return this.ionType;
     }
@@ -87,6 +88,7 @@ class HashReaderImpl implements HashReader, IonValue {
     stepIn() {
         this.hasher.stepIn(this);
         this.reader.stepIn();
+        this.ionType = null;
     }
 
     stepOut() {
