@@ -28,6 +28,15 @@ export interface HashWriter extends IonWriter {
     digest(): number[];
 }
 
+export interface IonHasherProvider {
+    (): IonHasher;
+}
+
+export interface IonHasher {
+    update(bytes): void;
+    digest(): number[];
+}
+
 interface IonValue {
     annotations(): string[];
     fieldName(): string;
@@ -152,15 +161,6 @@ class HashWriterImpl implements HashWriter, IonValue {
     }
 }
 
-export interface IonHasherProvider {
-    (): IonHasher;
-}
-
-export interface IonHasher {
-    update(bytes): void;
-    digest(): number[];
-}
-
 class Hasher {
     private readonly ihp: IonHasherProvider;
     private currentHasher: Serializer;
@@ -276,18 +276,11 @@ class Serializer {
     protected beginMarker() { this.hashFunction.update(BEGIN_MARKER_BYTE) }
     protected endMarker()   { this.hashFunction.update(END_MARKER_BYTE) }
 
+    // TBD merge with scalar()?
     private writeSymbol(token) {
         this.beginMarker();
-
-        let scalarBytes = this.getBytes(IonTypes.SYMBOL, token);
-        let [tq, representation] = this.scalarOrNullSplitParts(IonTypes.SYMBOL, scalarBytes);
-        tq = TQ['SYMBOL'];  // TBD fix
-
-        /*
-        if (SID0) {
-            tq = TQ_SYMBOL_SID0;
-        }
-         */
+        let scalarBytes = this.getBytes(IonTypes.SYMBOL, token, false);
+        let [tq, representation] = this.scalarOrNullSplitParts(IonTypes.SYMBOL, false, scalarBytes);
 
         this.update(tq);
         if (representation.length > 0) {
@@ -296,14 +289,15 @@ class Serializer {
         this.endMarker();
     }
 
-    private getBytes(type, value) {
-        if (value != undefined) {   // TBD is this needed?
+    private getBytes(type, value, isNull) {
+        if (isNull) {
+            return [type.bid << 4 | 0x0F];
+        } else {
             let writer = ion.makeBinaryWriter();
             Serializer.serializers[type.name](value, writer);
             writer.close();
             return writer.getBytes().slice(4);
         }
-        return [];
     }
 
     private getLengthLength(bytes): number {
@@ -319,13 +313,23 @@ class Serializer {
         return 0;
     }
 
-    private scalarOrNullSplitParts(type, bytes) {
+    private scalarOrNullSplitParts(type, isNull, bytes) {
         let offset = 1 + this.getLengthLength(bytes);
 
         // the representation is everything after TL (first byte) and length
         let representation = bytes.slice(offset);
 
         let tq = bytes[0];
+
+        if (type.name == 'symbol') { // TBD fix
+            // symbols are serialized as strings;  use the correct TQ:
+            tq = 0x70;
+            if (isNull) {
+                tq |= 0x0F;
+            }
+            // TBD if SID0 ...
+        }
+
         if (type != IonTypes.BOOL
                 && type != IonTypes.SYMBOL
                 && (tq & 0x0F) != 0x0F) {    // not a null value
@@ -339,17 +343,8 @@ class Serializer {
     scalar(ionValue: IonValue) {
         this.handleAnnotationsBegin(ionValue);
         this.beginMarker();
-        let scalarBytes;
-        if (ionValue.isNull()) {
-            scalarBytes = [ionValue.type().bid << 4 | 0x0F];
-        } else {
-            scalarBytes = this.getBytes(ionValue.type(), ionValue.value());
-        }
-        let [tq, representation] = this.scalarOrNullSplitParts(ionValue.type(), scalarBytes);
-
-        if (ionValue.type().name == 'symbol') { // TBD  == ion.IonTypes.SYMBOL) {
-            tq = 0x70;
-        }
+        let scalarBytes = this.getBytes(ionValue.type(), ionValue.value(), ionValue.isNull());
+        let [tq, representation] = this.scalarOrNullSplitParts(ionValue.type(), ionValue.isNull(), scalarBytes);
 
         this.update(tq);
         if (representation.length > 0) {
