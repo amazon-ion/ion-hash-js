@@ -73,7 +73,11 @@ class HashReaderImpl implements HashReader, IonValue {
     next(): IonType {
         this.ionType = this.reader.next();
         if (this.ionType != undefined) {
-            if (!this.ionType.container) {
+            if (this.ionType.container) {
+                this.hasher.stepIn(this);
+                // TBD traverse nested data...
+                this.hasher.stepOut();
+            } else {
                 this.hasher.scalar(this);
             }
         }
@@ -291,6 +295,7 @@ class Serializer {
 
     private getBytes(type, value, isNull) {
         if (isNull) {
+            //writeln('handling as null...');
             return [type.bid << 4 | 0x0F];
         } else {
             let writer = ion.makeBinaryWriter();
@@ -330,8 +335,8 @@ class Serializer {
             // TBD if SID0 ...
         }
 
-        if (type != IonTypes.BOOL
-                && type != IonTypes.SYMBOL
+        if (type.name != 'bool'              // TBD fix
+                && type.name != 'symbol'     // TBD fix
                 && (tq & 0x0F) != 0x0F) {    // not a null value
             tq &= 0xF0;                      // zero - out the L nibble
         }
@@ -344,6 +349,7 @@ class Serializer {
         this.handleAnnotationsBegin(ionValue);
         this.beginMarker();
         let scalarBytes = this.getBytes(ionValue.type(), ionValue.value(), ionValue.isNull());
+        //writeln('debug: ' + ionValue.value() + ', type: ' + ionValue.type().name + ', isNull: ' + ionValue.isNull() + ', ' + toHexString(scalarBytes));
         let [tq, representation] = this.scalarOrNullSplitParts(ionValue.type(), ionValue.isNull(), scalarBytes);
 
         this.update(tq);
@@ -358,7 +364,11 @@ class Serializer {
         this.handleFieldName(ionValue.fieldName());
         this.handleAnnotationsBegin(ionValue, true);
         this.beginMarker();
-        this.update(TQ[ionValue.type().name.toUpperCase()]);   // TBD  rationalize this
+        let tq = TQ[ionValue.type().name.toUpperCase()];   // TBD  rationalize this
+        if (ionValue.isNull()) {
+            tq |= 0x0F;
+        }
+        this.update(tq);
     }
 
     stepOut() {
