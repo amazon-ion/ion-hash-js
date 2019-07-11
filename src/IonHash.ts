@@ -2,6 +2,7 @@
 // TBD use uint8array instead of number[] ?
 // TBD use rewire to gain access to 'private' functions for testing
 // TBD should HashReader/HashWriter be interfaces that extend Reader/Writer?
+// TBD rename hashReader/hashWriter functions so callers can use those as variable names
 
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/browser/js/ion-bundle.js';
 import { Decimal } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonDecimal';
@@ -11,6 +12,8 @@ import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/
 import { Timestamp } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonTimestamp';
 import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonWriter';
 import { TypeCodes } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonBinary';
+//import { createHash, Hash } from '@types/node/crypto';
+//import { createHash, Hash } from 'node_modules/@types/node/crypto';
 
 export function hashReader(reader, hashFunctionProvider) {
     return new HashReaderImpl(reader, hashFunctionProvider);
@@ -36,6 +39,33 @@ export interface IonHasher {
     update(bytes: number | Uint8Array): void;
     digest(): number[];
 }
+
+/*
+class CryptoIonHasher implements IonHasher {
+    private readonly algorithm: string;
+    private hash: Hash;
+
+    constructor(algorithm: string) {
+        this.algorithm = algorithm;
+        this.hash = createHash(this.algorithm);
+    }
+
+    update(bytes: number | Uint8Array) {
+        this.hash.update(bytes);
+    }
+
+    digest() {
+        let digest = this.hash.digest();
+        this.hash = createHash(this.algorithm);
+        return digest;
+    }
+}
+
+export function cryptoIonHasherProvider(algorithm: string) {
+    return new CryptoIonHasher(algorithm);
+}
+ */
+
 
 interface IonValue {
     annotations(): string[];
@@ -110,10 +140,10 @@ class HashWriterImpl implements HashWriter, IonValue {
     private readonly hashFunctionProvider;
 
     private readonly hasher: Hasher;
-    private ionType: IonType;
-    private theAnnotations: string[];
-    private theFieldName: string;
-    private theValue: any;
+    private _ionType: IonType;
+    private _annotations: string[];
+    private _fieldName: string;
+    private _value: any;
 
     constructor(writer, hashFunctionProvider) {
         this.writer = writer;
@@ -121,21 +151,74 @@ class HashWriterImpl implements HashWriter, IonValue {
         this.hasher = new Hasher(hashFunctionProvider);
     }
 
-    writeBlob     (value: Uint8Array, annotations?: string[])  { this.writer.writeBlob(value, annotations) }
-    writeBoolean  (value: boolean, annotations?: string[])   { this.writer.writeBoolean(value, annotations) }
-    writeClob     (value: Uint8Array, annotations?: string[])  { this.writer.writeClob(value, annotations) }
-    writeDecimal  (value: Decimal, annotations?: string[])   { this.writer.writeDecimal(value, annotations) }
-    writeFieldName(fieldName: string)                        { this.writer.writeFieldName(fieldName) }
-    writeFloat32  (value: number, annotations?: string[])    { this.writer.writeFloat32(value, annotations) }
-    writeFloat64  (value: number, annotations?: string[])    { this.writer.writeFloat64(value, annotations) }
-    writeInt      (value: number, annotations?: string[])    { this.writer.writeInt(value, annotations) }
-    writeList     (annotations?: string[], isNull?: boolean) { this.writer.writeList(annotations, isNull) }
-    writeNull     (type: TypeCodes, annotations?: string[])  { this.writer.writeNull(type, annotations) }
-    writeSexp     (annotations?: string[], isNull?: boolean) { this.writer.writeSexp(annotations, isNull) }
-    writeString   (value: string, annotations?: string[])    { this.writer.writeString(value, annotations) }
-    writeStruct   (annotations?: string[], isNull?: boolean) { this.writer.writeStruct(annotations, isNull) }
-    writeSymbol   (value: string, annotations?: string[])    { this.writer.writeSymbol(value, annotations) }
-    writeTimestamp(value: Timestamp, annotations?: string[]) { this.writer.writeTimestamp(value, annotations) }
+    private scalar(type: IonType, value: any, annotations?: string[]) {
+        this._ionType = type;
+        this._value = value;
+        this._annotations = annotations;
+        this.hasher.scalar(this);
+    }
+
+    writeBlob(value: Uint8Array, annotations?: string[]) {
+        this.scalar(IonTypes.BLOB, value, annotations);
+        this.writer.writeBlob(value, annotations);
+    }
+    writeBoolean(value: boolean, annotations?: string[]) {
+        this.scalar(IonTypes.BOOL, value, annotations);
+        this.writer.writeBoolean(value, annotations);
+    }
+    writeClob(value: Uint8Array, annotations?: string[]) {
+        this.scalar(IonTypes.CLOB, value, annotations);
+        this.writer.writeClob(value, annotations);
+    }
+    writeDecimal(value: Decimal, annotations?: string[]) {
+        this.scalar(IonTypes.DECIMAL, value, annotations);
+        this.writer.writeDecimal(value, annotations);
+    }
+    writeFloat32(value: number, annotations?: string[]) {
+        this.scalar(IonTypes.FLOAT, value, annotations);
+        this.writer.writeFloat32(value, annotations);
+    }
+    writeFloat64(value: number, annotations?: string[]) {
+        this.scalar(IonTypes.FLOAT, value, annotations);
+        this.writer.writeFloat64(value, annotations);
+    }
+    writeInt(value: number, annotations?: string[]) {
+        this.scalar(IonTypes.INT, value, annotations);
+        this.writer.writeInt(value, annotations);
+    }
+    writeList(annotations?: string[], isNull?: boolean) {
+        //this.scalar(IonTypes.LIST, value, annotations);
+        this.writer.writeList(annotations, isNull);
+    }
+    writeNull(type: TypeCodes, annotations?: string[]) {
+        this.scalar(IonTypes.NULL, null, annotations);
+        this.writer.writeNull(type, annotations);
+    }
+    writeSexp(annotations?: string[], isNull?: boolean) {
+        //this.scalar(IonTypes.SEXP, value, annotations);
+        this.writer.writeSexp(annotations, isNull);
+    }
+    writeString(value: string, annotations?: string[]) {
+        this.scalar(IonTypes.STRING, value, annotations);
+        this.writer.writeString(value, annotations);
+    }
+    writeStruct(annotations?: string[], isNull?: boolean) {
+        //this.scalar(IonTypes.STRUCT, value, annotations);
+        this.writer.writeStruct(annotations, isNull);
+    }
+    writeSymbol(value: string, annotations?: string[]) {
+        this.scalar(IonTypes.SYMBOL, value, annotations);
+        this.writer.writeSymbol(value, annotations);
+    }
+    writeTimestamp(value: Timestamp, annotations?: string[]) {
+        this.scalar(IonTypes.TIMESTAMP, value, annotations);
+        this.writer.writeTimestamp(value, annotations);
+    }
+
+    writeFieldName(fieldName: string) {
+        this._fieldName = fieldName;
+        this.writer.writeFieldName(fieldName);
+    }
 
     getBytes      (): Uint8Array { return this.writer.getBytes() }
     close         ()           { this.writer.close() }
@@ -143,7 +226,7 @@ class HashWriterImpl implements HashWriter, IonValue {
 
     ///// implements IonValue /////
     annotations(): string[] {
-        return this.theAnnotations;
+        return this._annotations;
     }
 
     digest(): number[] {
@@ -151,19 +234,20 @@ class HashWriterImpl implements HashWriter, IonValue {
     }
 
     fieldName(): string {
-        return this.theFieldName;
+        return this._fieldName;
     }
 
+    // TBD can a caller invoke writeString(null) ?
     isNull(): boolean {
         return false;  // TBD
     }
 
     type(): IonType {
-        return this.ionType;
+        return this._ionType;
     }
 
     value(): any {
-        return this.theValue;
+        return this._value;
     }
 }
 
