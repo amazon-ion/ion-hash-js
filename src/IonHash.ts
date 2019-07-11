@@ -40,6 +40,8 @@ export interface IonHasher {
     digest(): number[];
 }
 
+//let crypto = require('crypto');
+
 /*
 class CryptoIonHasher implements IonHasher {
     private readonly algorithm: string;
@@ -112,10 +114,14 @@ class HashReaderImpl implements HashReader, IonValue {
 
     next(): IonType {
         if (this.ionType && this.ionType.container) {
-            // caller is nexting past a container;  perform deep traversal to ensure hashing correctness
-            this.stepIn();
-            this.traverse();
-            this.stepOut();
+            if (this.isNull()) {
+                this.hasher.scalar(this);
+            } else {
+                // caller is nexting past a container;  perform deep traversal to ensure hashing correctness
+                this.stepIn();
+                this.traverse();
+                this.stepOut();
+            }
         }
 
         this.ionType = this.reader.next();
@@ -590,5 +596,10 @@ function toHexString(byteArray) {
     return Array.from(byteArray, function(b) {
         return ('0' + ((b as number) & 0xFF).toString(16)).slice(-2);
     }).join(' ')
+}
+
+writeln('contents of require.cache:');
+for (let p in require.cache) {
+    writeln('  require.cache[' + p + ']: ' + require.cache[p]);
 }
 
