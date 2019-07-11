@@ -144,7 +144,10 @@ define([
 
 
         // build the suite based on the contents of ion_hash_tests.ion
-        let suite = { name: 'IonHashTests' };
+        let suites = { };
+        ['ReaderTest', 'WriterTest'].forEach(suite => {
+            suites[suite] = { name: 'IonHashTests.' + suite };
+        });
 
         let ionTests = fs.readFileSync('tests/ion_hash_tests.ion', 'utf8');
         let testCount = 0;
@@ -183,9 +186,8 @@ define([
                 }
 
                 if (algorithm == 'identity') {   // TBD remove to enable MD5 tests
-                    suite[theTestName] = () => {
-                        runTest(ionStr, algorithm, expects[algorithm]);
-                    };
+                    suites['ReaderTest'][theTestName] = () => { runReaderTest(ionStr, algorithm, expects[algorithm]) };
+                    suites['WriterTest'][theTestName] = () => { runWriterTest(ionStr, algorithm, expects[algorithm]) };
                 }
             }
             testCount++;
@@ -193,11 +195,13 @@ define([
         util.writeln("testCount: " + testCount);
 
 
-        // ask intern to execute the tests
-        registerSuite(suite);
+        // ask intern to execute the tests in each suite
+        for (const suite in suites) {
+            registerSuite(suites[suite]);
+        }
 
 
-        function runTest(ionStr, algorithm, expect) {
+        function getExpectedDigest(expect): string {
             let expectedDigest;
             let reader = ion.makeReader(expect);
             reader.next();
@@ -208,14 +212,28 @@ define([
                     expectedDigest = util.toHexString(sexpToBytes(reader));
                 }
             }
+            return expectedDigest;
+        }
 
+        function runReaderTest(ionStr, algorithm, expect) {
+            let expectedDigest = getExpectedDigest(expect);
             let hashReader = ionhash.hashReader(ion.makeReader(ionStr), testIonHasherProvider);
             traverse(hashReader);
-            //hashReader.next();
             let actualDigest = util.toHexString(hashReader.digest());
 
             assert.equal(actualDigest, expectedDigest);
-        };
+        }
+
+        function runWriterTest(ionStr, algorithm, expect) {
+            let expectedDigest = getExpectedDigest(expect);
+            let reader = ion.makeReader(ionStr);
+            let type = reader.next();
+            let hashWriter = ionhash.hashWriter(ion.makeBinaryWriter(), testIonHasherProvider);
+            writeTo(reader, type, hashWriter);
+            let actualDigest = util.toHexString(hashWriter.digest());
+
+            assert.equal(actualDigest, expectedDigest);
+        }
 
         function traverse(reader) {
             for (let type; type = reader.next(); ) {
@@ -235,7 +253,7 @@ define([
             }
             reader.stepOut();
             return bytes;
-        };
+        }
     }
 );
 

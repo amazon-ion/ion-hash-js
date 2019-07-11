@@ -10,9 +10,9 @@ module.exports = function(grunt) {
           config: 'intern',
           //reporters: ['Console', 'node_modules/remap-istanbul/lib/intern-reporters/JsonCoverage'],
           //ionVersion: 'es6',
-          suites: 'tests/**/*.js',
+          //suites: 'tests/**/*.js',
           //suites: 'tests/**/BigList*.js',
-          //suites: 'tests/**/IonHashTests.js',
+          suites: 'tests/**/IonHashTests.js',
         },
       },
 //      commonjs: {
