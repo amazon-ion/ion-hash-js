@@ -153,9 +153,9 @@ class HashWriterImpl implements HashWriter, IonValue {
         this._ionType = type;
         this._value = value;
         this._annotations = annotations;
-        this._fieldName = null;
-        this._isNull = value == null;
+        this._isNull = (value == undefined || value == null);
         this.hasher.scalar(this);
+        this._fieldName = null;
     }
 
     writeBlob(value: Uint8Array, annotations?: string[]) {
@@ -187,8 +187,25 @@ class HashWriterImpl implements HashWriter, IonValue {
         this.writer.writeInt(value, annotations);
     }
     writeNull(type: TypeCodes, annotations?: string[]) {
-        this.hashScalar(IonTypes.NULL, null, annotations);
-        this.writer.writeNull(type, annotations);
+        let ionType;
+        switch (type) {
+            case TypeCodes.NULL:         { ionType = IonTypes.NULL; break }
+            case TypeCodes.BOOL:         { ionType = IonTypes.BOOL; break }
+            case TypeCodes.POSITIVE_INT: { ionType = IonTypes.INT; break }
+            case TypeCodes.NEGATIVE_INT: { ionType = IonTypes.INT; break }
+            case TypeCodes.FLOAT:        { ionType = IonTypes.FLOAT; break }
+            case TypeCodes.DECIMAL:      { ionType = IonTypes.DECIMAL; break }
+            case TypeCodes.TIMESTAMP:    { ionType = IonTypes.TIMESTAMP; break }
+            case TypeCodes.SYMBOL:       { ionType = IonTypes.SYMBOL; break }
+            case TypeCodes.STRING:       { ionType = IonTypes.STRING; break }
+            case TypeCodes.CLOB:         { ionType = IonTypes.CLOB; break }
+            case TypeCodes.BLOB:         { ionType = IonTypes.BLOB; break }
+            case TypeCodes.LIST:         { ionType = IonTypes.LIST; break }
+            case TypeCodes.SEXP:         { ionType = IonTypes.SEXP; break }
+            case TypeCodes.STRUCT:       { ionType = IonTypes.STRUCT; break }
+        }
+        this.hashScalar(ionType, null, annotations);
+        this.writer.writeNull(ionType, annotations);
     }
     writeString(value: string, annotations?: string[]) {
         this.hashScalar(IonTypes.STRING, value, annotations);
@@ -209,7 +226,9 @@ class HashWriterImpl implements HashWriter, IonValue {
         this._ionType = type;
         this._value = null;
         this._annotations = annotations;
+        this._isNull = false;
         this.hasher.stepIn(this);
+        this._fieldName = null;
     }
 
     writeList(annotations?: string[], isNull?: boolean) {
