@@ -100,12 +100,22 @@ class HashReaderImpl implements HashReader, IonValue {
     timestampValue(): Timestamp { return this.reader.timestampValue() }
     value()         : any       { return this.reader.value() }
 
+    private traverse() {
+        for (let type; type = this.next(); ) {
+            if (type.container && !this.isNull()) {
+                this.stepIn();
+                this.traverse();
+                this.stepOut();
+            }
+        }
+    }
+
     next(): IonType {
         if (this.ionType && this.ionType.container) {
-            // caller is nexting past a container;  hashing requires full/deep traversal
-            this.hasher.stepIn(this);
-            // TBD traverse nested data...
-            this.hasher.stepOut();
+            // caller is nexting past a container;  perform deep traversal to ensure hashing correctness
+            this.stepIn();
+            this.traverse();
+            this.stepOut();
         }
 
         this.ionType = this.reader.next();

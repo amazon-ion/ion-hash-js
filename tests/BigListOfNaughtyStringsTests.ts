@@ -133,10 +133,12 @@ define([
         let suite = { name: 'BigListOfNaughtyStringsTests' };
         let testCount = 0;
         strings.forEach(str => {
-            suite[str] = () => {
-                runTest(str);
-            };
-            testCount++;
+            //if (str == "'undefined'::{'undefined':'undefined'}") {
+                suite[str] = () => {
+                    runTest(str);
+                };
+                testCount++;
+            //}
         });
         util.writeln("testCount: " + testCount);
 
@@ -221,14 +223,17 @@ define([
                 let reader = ion.makeReader(tv.ion);
                 hashReader = ionhash.hashReader(reader, testIonHasherProvider);
                 hashReader.next();
+                hashReader.next();
             } catch (e) {
+                util.writeln(e);
                 if (tv.validIon) {
                     throw e;
                 }
             }
 
             if (tv.validIon == null || tv.validIon) {
-                assert.deepEqual(hashWriter.digest(), hashReader.digest());
+                assert.equal(util.toHexString(hashWriter.digest()),
+                    util.toHexString(hashReader.digest()));
             }
         };
     }
