@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "types": ["intern"],
+    "declaration": true,
+    "sourceMap": true,
+    "verbose": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
+

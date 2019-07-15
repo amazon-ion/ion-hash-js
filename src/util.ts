@@ -7,8 +7,11 @@ export function writeln(s = "") {
 };
 
 export function toHexString(byteArray) {
-    return Array.from(byteArray, function(b) {
-        return ('0' + ((b as number) & 0xFF).toString(16)).slice(-2);
-    }).join(' ')
+    let sb = '';
+    byteArray.forEach(b => {
+        if (sb != '') { sb += ' ' }
+        sb += ('0' + ((b as number) & 0xFF).toString(16)).slice(-2);
+    });
+    return sb;
 }
 

@@ -5,14 +5,15 @@
 // TBD rename hashReader/hashWriter functions so callers can use those as variable names
 // TBD turn "--strictNullChecks" on
 
-import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/browser/js/ion-bundle.js';
-import { Decimal } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonDecimal';
-import { IonType } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonType';
-import { IonTypes } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonTypes';
-import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonReader';
-import { Timestamp } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonTimestamp';
-import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonWriter';
-import { TypeCodes } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonBinary';
+import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
+import { Decimal } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonDecimal';
+import { IonType } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonType';
+import { IonTypes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonTypes';
+import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonReader';
+import { Timestamp } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonTimestamp';
+import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonWriter';
+import { TypeCodes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonBinary';
+
 //import { createHash, Hash } from '@types/node/crypto';
 //import { createHash, Hash } from 'node_modules/@types/node/crypto';
 
@@ -594,13 +595,11 @@ let writeln = function (s = "") {
 };
 
 function toHexString(byteArray) {
-    return Array.from(byteArray, function(b) {
-        return ('0' + ((b as number) & 0xFF).toString(16)).slice(-2);
-    }).join(' ')
-}
-
-writeln('contents of require.cache:');
-for (let p in require.cache) {
-    writeln('  require.cache[' + p + ']: ' + require.cache[p]);
+    let sb = '';
+    byteArray.forEach(b => {
+        if (sb != '') { sb += ' ' }
+        sb += ('0' + ((b as number) & 0xFF).toString(16)).slice(-2);
+    });
+    return sb;
 }
 
