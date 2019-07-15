@@ -12,11 +12,9 @@ define([
             private static ionPrefix = 'ion::';
             private static invalidIonPrefix = 'invalid_ion::';
 
-            readonly ion: string;
             readonly validIon: boolean;
 
-            constructor(str) {
-                this.ion = str;
+            constructor(public ion: string) {
                 this.validIon = null;
 
                 if (this.ion.startsWith(TestValue.ionPrefix)) {

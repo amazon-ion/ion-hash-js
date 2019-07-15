@@ -3,6 +3,7 @@
 // TBD use rewire to gain access to 'private' functions for testing
 // TBD should HashReader/HashWriter be interfaces that extend Reader/Writer?
 // TBD rename hashReader/hashWriter functions so callers can use those as variable names
+// TBD turn "--strictNullChecks" on
 
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/browser/js/ion-bundle.js';
 import { Decimal } from '/Users/pcornell/dev/ion/ion-js.development/dist/amd/es6/IonDecimal';
