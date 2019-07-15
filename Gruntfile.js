@@ -7,14 +7,13 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     clean: [
-      'dist/',
-      'docs/',
+      'dist',
     ],
 
     ts: {
       options: {
         default: {
-          tsconfig: './tsconfig.json',
+          tsconfig: 'tsconfig.json',
           verbose: true,
         },
       },
@@ -22,8 +21,8 @@ module.exports = function(grunt) {
         src: ['tests/**/*.ts'],
         outDir: 'dist/commonjs/es5',
         options: {
-          target: "es5",
-          module: "commonjs",
+          target: 'es5',
+          module: 'commonjs',
           declaration: true,
           sourceMap: true,
         },
@@ -48,7 +47,7 @@ module.exports = function(grunt) {
         options: {
           module: 'commonjs',
           target: 'es5',
-          out: 'docs/api/',
+          out: 'docs/api',
           name: 'ion-hash-js',
         },
         src: 'src/**/*',
@@ -56,7 +55,6 @@ module.exports = function(grunt) {
     },
   });
 
-  // define targets
   grunt.registerTask('build',   ['clean', 'ts:commonjs-es5']);
   grunt.registerTask('test',    ['build', 'intern:es5']);
   grunt.registerTask('default', ['test']);
