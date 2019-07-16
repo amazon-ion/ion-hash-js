@@ -3,19 +3,15 @@ import { IonHasher } from "../src/IonHash";
 
 class IdentityIonHasher implements IonHasher {
     private allBytes: number[] = [];
-    update(bytes: number | Uint8Array) {
-        if (bytes['forEach'] != undefined) {
-            (bytes as Uint8Array).forEach((b) => {
-                this.allBytes.push(b);
-            });
-        } else {
-            this.allBytes.push(bytes as number);
+    update(bytes: Uint8Array) {
+        for (let i = 0; i < bytes.length; i++) {
+            this.allBytes.push(bytes[i]);
         }
     }
-    digest() {
+    digest(): Buffer {
         let digest = this.allBytes;
         this.allBytes = [];
-        return digest;
+        return Buffer.from(digest);
     }
 };
 

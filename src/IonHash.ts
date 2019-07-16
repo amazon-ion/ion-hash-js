@@ -14,8 +14,7 @@ import { Timestamp } from '/Users/pcornell/dev/ion/ion-js.development/dist/commo
 import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonWriter';
 import { TypeCodes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonBinary';
 
-//import { createHash, Hash } from '@types/node/crypto';
-//import { createHash, Hash } from 'node_modules/@types/node/crypto';
+import { createHash, Hash } from 'crypto';
 
 export function hashReader(reader, hashFunctionProvider) {
     return new HashReaderImpl(reader, hashFunctionProvider);
@@ -26,11 +25,11 @@ export function hashWriter(writer, hashFunctionProvider) {
 }
 
 export interface HashReader extends IonReader {
-    digest(): number[];
+    digest(): Buffer;
 }
 
 export interface HashWriter extends IonWriter {
-    digest(): number[];
+    digest(): Buffer;
 }
 
 export interface IonHasherProvider {
@@ -38,13 +37,14 @@ export interface IonHasherProvider {
 }
 
 export interface IonHasher {
-    update(bytes: number | Uint8Array): void;
-    digest(): number[];
+    update(bytes: Uint8Array);
+    digest(): Buffer;
 }
 
-//let crypto = require('crypto');
+export function cryptoIonHasherProvider(algorithm: string) {
+    return new CryptoIonHasher(algorithm);
+}
 
-/*
 class CryptoIonHasher implements IonHasher {
     private readonly algorithm: string;
     private hash: Hash;
@@ -54,21 +54,16 @@ class CryptoIonHasher implements IonHasher {
         this.hash = createHash(this.algorithm);
     }
 
-    update(bytes: number | Uint8Array) {
+    update(bytes: Uint8Array) {
         this.hash.update(bytes);
     }
 
-    digest() {
+    digest(): Buffer {
         let digest = this.hash.digest();
         this.hash = createHash(this.algorithm);
         return digest;
     }
 }
-
-export function cryptoIonHasherProvider(algorithm: string) {
-    return new CryptoIonHasher(algorithm);
-}
- */
 
 
 interface IonValue {
@@ -144,7 +139,7 @@ class HashReaderImpl implements HashReader, IonValue {
         this.hasher.stepOut();
     }
 
-    digest(): number[] { return this.hasher.digest() }
+    digest(): Buffer { return this.hasher.digest() }
     type(): IonType { return this.ionType }
 }
 
@@ -275,7 +270,7 @@ class HashWriterImpl implements HashWriter, IonValue {
     getBytes      (): Uint8Array { return this.writer.getBytes() }
     close         ()           { this.writer.close() }
 
-    digest(): number[] { return this.hasher.digest() }
+    digest(): Buffer { return this.hasher.digest() }
 
     ///// implements IonValue /////
     annotations(): string[] { return this._annotations }
@@ -331,7 +326,7 @@ class Hasher {
         }
     }
 
-    digest(): number[] {
+    digest(): Buffer {
         if (this.depth() != 0) {
             // TBD throw exception
         }
@@ -396,9 +391,9 @@ class Serializer {
         }
     }
 
-    protected update(bytes) { this.hashFunction.update(bytes) }
-    protected beginMarker() { this.hashFunction.update(BEGIN_MARKER_BYTE) }
-    protected endMarker()   { this.hashFunction.update(END_MARKER_BYTE) }
+    protected update(bytes: Uint8Array) { this.hashFunction.update(bytes) }
+    protected beginMarker() { this.hashFunction.update(BEGIN_MARKER) }
+    protected endMarker()   { this.hashFunction.update(END_MARKER) }
 
     // TBD merge with scalar()?
     private writeSymbol(token) {
@@ -406,7 +401,7 @@ class Serializer {
         let scalarBytes = this.getBytes(IonTypes.SYMBOL, token, false);
         let [tq, representation] = this.scalarOrNullSplitParts(IonTypes.SYMBOL, false, scalarBytes);
 
-        this.update(tq);
+        this.update(new Uint8Array([tq]));
         if (representation.length > 0) {
             this.update(escape(representation));
         }
@@ -468,7 +463,7 @@ class Serializer {
         this.beginMarker();
         let scalarBytes = this.getBytes(ionValue.type(), ionValue.value(), ionValue.isNull());
         let [tq, representation] = this.scalarOrNullSplitParts(ionValue.type(), ionValue.isNull(), scalarBytes);
-        this.update(tq);
+        this.update(new Uint8Array([tq]));
         if (representation.length > 0) {
             this.update(escape(representation));
         }
@@ -484,7 +479,7 @@ class Serializer {
         if (ionValue.isNull()) {
             tq |= 0x0F;
         }
-        this.update(tq);
+        this.update(new Uint8Array([tq]));
     }
 
     stepOut() {
@@ -554,13 +549,15 @@ export function byteArrayComparator(a: number[], b: number[]) {
 const BEGIN_MARKER_BYTE = 0x0B;
 const END_MARKER_BYTE = 0x0E;
 const ESCAPE_BYTE = 0x0C;
+const BEGIN_MARKER = new Uint8Array([BEGIN_MARKER_BYTE]);
+const END_MARKER = new Uint8Array([END_MARKER_BYTE]);
 
 const TQ = {};
 for (let ionType in IonTypes) {
     TQ[ionType] = IonTypes[ionType].bid << 4;
 }
-const TQ_SYMBOL_SID0 = 0x71;
-const TQ_ANNOTATED_VALUE = 0xE0;
+const TQ_SYMBOL_SID0 = new Uint8Array([0x71]);
+const TQ_ANNOTATED_VALUE = new Uint8Array([0xE0]);
 
 
 export function escape(bytes) {
