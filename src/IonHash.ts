@@ -1,9 +1,3 @@
-// TBD
-// TBD use uint8array instead of number[] ?
-// TBD use rewire to gain access to 'private' functions for testing
-// TBD should HashReader/HashWriter be interfaces that extend Reader/Writer?
-// TBD turn "--strictNullChecks" on
-
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
 import { Decimal } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonDecimal';
 import { IonType } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonType';
@@ -15,19 +9,19 @@ import { TypeCodes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commo
 
 import { createHash, Hash } from 'crypto';
 
-export function makeHashReader(reader, hashFunctionProvider) {
-    return new HashReaderImpl(reader, hashFunctionProvider);
+export function makeHashReader(reader, hashFunctionProvider): IonHashReader {
+    return new _HashReaderImpl(reader, hashFunctionProvider);
 }
 
-export function makeHashWriter(writer, hashFunctionProvider) {
-    return new HashWriterImpl(writer, hashFunctionProvider);
+export function makeHashWriter(writer, hashFunctionProvider): IonHashWriter {
+    return new _HashWriterImpl(writer, hashFunctionProvider);
 }
 
-export interface HashReader extends IonReader {
+export interface IonHashReader extends IonReader {
     digest(): Buffer;
 }
 
-export interface HashWriter extends IonWriter {
+export interface IonHashWriter extends IonWriter {
     digest(): Buffer;
 }
 
@@ -41,162 +35,170 @@ export interface IonHasher {
 }
 
 export function cryptoIonHasherProvider(algorithm: string) {
-    return new CryptoIonHasher(algorithm);
+    return new _CryptoIonHasher(algorithm);
 }
 
-class CryptoIonHasher implements IonHasher {
-    private readonly algorithm: string;
-    private hash: Hash;
+class _CryptoIonHasher implements IonHasher {
+    private readonly _algorithm: string;
+    private _hash: Hash;
 
     constructor(algorithm: string) {
-        this.algorithm = algorithm;
-        this.hash = createHash(this.algorithm);
+        this._algorithm = algorithm;
+        this._hash = createHash(this._algorithm);
     }
 
     update(bytes: Uint8Array) {
-        this.hash.update(bytes);
+        this._hash.update(bytes);
     }
 
     digest(): Buffer {
-        let digest = this.hash.digest();
-        this.hash = createHash(this.algorithm);
+        let digest = this._hash.digest();
+        this._hash = createHash(this._algorithm);
         return digest;
     }
 }
 
 
-interface IonValue {
-    annotations(): string[];
-    fieldName(): string;
-    isNull(): boolean;
-    type(): IonType;
-    value(): any;
+interface _IonValue {
+    _annotations(): string[];
+    _fieldName(): string;
+    _isNull(): boolean;
+    _type(): IonType;
+    _value(): any;
 }
 
-class HashReaderImpl implements HashReader, IonValue {
-    private readonly reader: IonReader;
-    private readonly hashFunctionProvider;
+class _HashReaderImpl implements IonHashReader, _IonValue {
+    private readonly _reader: IonReader;
+    private readonly _hashFunctionProvider;
 
-    private readonly hasher: Hasher;
-    private ionType: IonType;
+    private readonly _hasher: Hasher;
+    private _ionType: IonType;
 
     constructor(reader, hashFunctionProvider) {
-        this.reader = reader;
-        this.hashFunctionProvider = hashFunctionProvider;
-        this.hasher = new Hasher(hashFunctionProvider);
+        this._reader = reader;
+        this._hashFunctionProvider = hashFunctionProvider;
+        this._hasher = new Hasher(this._hashFunctionProvider);
     }
 
-    annotations()   : string[]  { return this.reader.annotations() }
-    booleanValue()  : boolean   { return this.reader.booleanValue() }
-    byteValue()     : Uint8Array  { return this.reader.byteValue() }
-    decimalValue()  : Decimal   { return this.reader.decimalValue() }
-    depth()         : number    { return this.reader.depth() }
-    fieldName()     : string    { return this.reader.fieldName() }
-    isNull()        : boolean   { return this.reader.isNull() }
-    numberValue()   : number    { return this.reader.numberValue() }
-    stringValue()   : string    { return this.reader.stringValue() }
-    timestampValue(): Timestamp { return this.reader.timestampValue() }
-    value()         : any       { return this.reader.value() }
+    // implements IonReader
+    annotations()   : string[]  { return this._reader.annotations() }
+    booleanValue()  : boolean   { return this._reader.booleanValue() }
+    byteValue()     : Uint8Array  { return this._reader.byteValue() }
+    decimalValue()  : Decimal   { return this._reader.decimalValue() }
+    depth()         : number    { return this._reader.depth() }
+    fieldName()     : string    { return this._reader.fieldName() }
+    isNull()        : boolean   { return this._reader.isNull() }
+    numberValue()   : number    { return this._reader.numberValue() }
+    stringValue()   : string    { return this._reader.stringValue() }
+    timestampValue(): Timestamp { return this._reader.timestampValue() }
+    value()         : any       { return this._reader.value() }
 
-    private traverse() {
+    private _traverse() {
         for (let type; type = this.next(); ) {
             if (type.container && !this.isNull()) {
                 this.stepIn();
-                this.traverse();
+                this._traverse();
                 this.stepOut();
             }
         }
     }
 
     next(): IonType {
-        if (this.ionType && this.ionType.container) {
+        if (this._ionType && this._ionType.container) {
             if (this.isNull()) {
-                this.hasher.scalar(this);
+                this._hasher._scalar(this);
             } else {
                 // caller is nexting past a container;  perform deep traversal to ensure hashing correctness
                 this.stepIn();
-                this.traverse();
+                this._traverse();
                 this.stepOut();
             }
         }
 
-        this.ionType = this.reader.next();
-        if (this.ionType && this.ionType.scalar) {
-            this.hasher.scalar(this);
+        this._ionType = this._reader.next();
+        if (this._ionType && this._ionType.scalar) {
+            this._hasher._scalar(this);
         }
-        return this.ionType;
+        return this._ionType;
     }
 
     stepIn() {
-        this.hasher.stepIn(this);
-        this.reader.stepIn();
-        this.ionType = null;
+        this._hasher._stepIn(this);
+        this._reader.stepIn();
+        this._ionType = null;
     }
 
     stepOut() {
-        this.reader.stepOut();
-        this.hasher.stepOut();
+        this._reader.stepOut();
+        this._hasher._stepOut();
     }
 
-    digest(): Buffer { return this.hasher.digest() }
-    type(): IonType { return this.ionType }
+    // implements IonHashReader
+    digest(): Buffer { return this._hasher._digest() }
+
+    // implements _IonValue
+    _annotations(): string[] { return this.annotations() }
+    _fieldName(): string     { return this.fieldName() }
+    _isNull(): boolean       { return this.isNull() }
+    _type(): IonType         { return this._ionType }
+    _value(): any            { return this.value() }
 }
 
-class HashWriterImpl implements HashWriter, IonValue {
-    private readonly writer: IonWriter;
-    private readonly hashFunctionProvider;
-    private readonly hasher: Hasher;
+class _HashWriterImpl implements IonHashWriter, _IonValue {
+    private readonly _writer: IonWriter;
+    private readonly _hashFunctionProvider;
+    private readonly _hasher: Hasher;
 
-    private _ionType: IonType;
-    private _annotations: string[];
-    private _fieldName: string;
-    private _isNull: boolean;
-    private _value: any;
+    private __ionType: IonType;
+    private __annotations: string[];
+    private __fieldName: string;
+    private __isNull: boolean;
+    private __value: any;
 
     constructor(writer, hashFunctionProvider) {
-        this.writer = writer;
-        this.hashFunctionProvider = hashFunctionProvider;
-        this.hasher = new Hasher(hashFunctionProvider);
+        this._writer = writer;
+        this._hashFunctionProvider = hashFunctionProvider;
+        this._hasher = new Hasher(this._hashFunctionProvider);
     }
 
     ///// scalars
 
-    private hashScalar(type: IonType, value: any, annotations?: string[]) {
-        this._ionType = type;
-        this._value = value;
-        this._annotations = annotations;
-        this._isNull = (value == undefined || value == null);
-        this.hasher.scalar(this);
-        this._fieldName = null;
+    private _hashScalar(type: IonType, value: any, annotations?: string[]) {
+        this.__ionType = type;
+        this.__value = value;
+        this.__annotations = annotations;
+        this.__isNull = (value == undefined || value == null);
+        this._hasher._scalar(this);
+        this.__fieldName = null;
     }
 
     writeBlob(value: Uint8Array, annotations?: string[]) {
-        this.hashScalar(IonTypes.BLOB, value, annotations);
-        this.writer.writeBlob(value, annotations);
+        this._hashScalar(IonTypes.BLOB, value, annotations);
+        this._writer.writeBlob(value, annotations);
     }
     writeBoolean(value: boolean, annotations?: string[]) {
-        this.hashScalar(IonTypes.BOOL, value, annotations);
-        this.writer.writeBoolean(value, annotations);
+        this._hashScalar(IonTypes.BOOL, value, annotations);
+        this._writer.writeBoolean(value, annotations);
     }
     writeClob(value: Uint8Array, annotations?: string[]) {
-        this.hashScalar(IonTypes.CLOB, value, annotations);
-        this.writer.writeClob(value, annotations);
+        this._hashScalar(IonTypes.CLOB, value, annotations);
+        this._writer.writeClob(value, annotations);
     }
     writeDecimal(value: Decimal, annotations?: string[]) {
-        this.hashScalar(IonTypes.DECIMAL, value, annotations);
-        this.writer.writeDecimal(value, annotations);
+        this._hashScalar(IonTypes.DECIMAL, value, annotations);
+        this._writer.writeDecimal(value, annotations);
     }
     writeFloat32(value: number, annotations?: string[]) {
-        this.hashScalar(IonTypes.FLOAT, value, annotations);
-        this.writer.writeFloat32(value, annotations);
+        this._hashScalar(IonTypes.FLOAT, value, annotations);
+        this._writer.writeFloat32(value, annotations);
     }
     writeFloat64(value: number, annotations?: string[]) {
-        this.hashScalar(IonTypes.FLOAT, value, annotations);
-        this.writer.writeFloat64(value, annotations);
+        this._hashScalar(IonTypes.FLOAT, value, annotations);
+        this._writer.writeFloat64(value, annotations);
     }
     writeInt(value: number, annotations?: string[]) {
-        this.hashScalar(IonTypes.INT, value, annotations);
-        this.writer.writeInt(value, annotations);
+        this._hashScalar(IonTypes.INT, value, annotations);
+        this._writer.writeInt(value, annotations);
     }
     writeNull(type: TypeCodes, annotations?: string[]) {
         let ionType;
@@ -216,129 +218,130 @@ class HashWriterImpl implements HashWriter, IonValue {
             case TypeCodes.SEXP:         { ionType = IonTypes.SEXP; break }
             case TypeCodes.STRUCT:       { ionType = IonTypes.STRUCT; break }
         }
-        this.hashScalar(ionType, null, annotations);
-        this.writer.writeNull(ionType, annotations);
+        this._hashScalar(ionType, null, annotations);
+        this._writer.writeNull(ionType, annotations);
     }
     writeString(value: string, annotations?: string[]) {
-        this.hashScalar(IonTypes.STRING, value, annotations);
-        this.writer.writeString(value, annotations);
+        this._hashScalar(IonTypes.STRING, value, annotations);
+        this._writer.writeString(value, annotations);
     }
     writeSymbol(value: string, annotations?: string[]) {
-        this.hashScalar(IonTypes.SYMBOL, value, annotations);
-        this.writer.writeSymbol(value, annotations);
+        this._hashScalar(IonTypes.SYMBOL, value, annotations);
+        this._writer.writeSymbol(value, annotations);
     }
     writeTimestamp(value: Timestamp, annotations?: string[]) {
-        this.hashScalar(IonTypes.TIMESTAMP, value, annotations);
-        this.writer.writeTimestamp(value, annotations);
+        this._hashScalar(IonTypes.TIMESTAMP, value, annotations);
+        this._writer.writeTimestamp(value, annotations);
     }
 
     ///// containers
 
-    private hashContainer(type: IonType, annotations?: string[], isNull?: boolean) {
-        this._ionType = type;
-        this._value = null;
-        this._annotations = annotations;
-        this._isNull = false;
-        this.hasher.stepIn(this);
-        this._fieldName = null;
+    private _hashContainer(type: IonType, annotations?: string[], isNull?: boolean) {
+        this.__ionType = type;
+        this.__value = null;
+        this.__annotations = annotations;
+        this.__isNull = false;
+        this._hasher._stepIn(this);
+        this.__fieldName = null;
     }
 
     writeList(annotations?: string[], isNull?: boolean) {
-        this.hashContainer(IonTypes.LIST, annotations, isNull);
-        this.writer.writeList(annotations, isNull);
+        this._hashContainer(IonTypes.LIST, annotations, isNull);
+        this._writer.writeList(annotations, isNull);
     }
     writeSexp(annotations?: string[], isNull?: boolean) {
-        this.hashContainer(IonTypes.SEXP, annotations, isNull);
-        this.writer.writeSexp(annotations, isNull);
+        this._hashContainer(IonTypes.SEXP, annotations, isNull);
+        this._writer.writeSexp(annotations, isNull);
     }
     writeStruct(annotations?: string[], isNull?: boolean) {
-        this.hashContainer(IonTypes.STRUCT, annotations, isNull);
-        this.writer.writeStruct(annotations, isNull);
+        this._hashContainer(IonTypes.STRUCT, annotations, isNull);
+        this._writer.writeStruct(annotations, isNull);
     }
     endContainer() {
-        this.hasher.stepOut();
-        this.writer.endContainer();
+        this._hasher._stepOut();
+        this._writer.endContainer();
     }
 
 
     writeFieldName(fieldName: string) {
-        this._fieldName = fieldName;
-        this.writer.writeFieldName(fieldName);
+        this.__fieldName = fieldName;
+        this._writer.writeFieldName(fieldName);
     }
 
-    getBytes      (): Uint8Array { return this.writer.getBytes() }
-    close         ()           { this.writer.close() }
+    getBytes      (): Uint8Array { return this._writer.getBytes() }
+    close         ()           { this._writer.close() }
 
-    digest(): Buffer { return this.hasher.digest() }
+    // implements IonHashWriter
+    digest(): Buffer { return this._hasher._digest() }
 
-    ///// implements IonValue /////
-    annotations(): string[] { return this._annotations }
-    fieldName(): string { return this._fieldName }
-    isNull(): boolean { return this._isNull }   // TBD can a caller invoke writeString(null) ?
-    type(): IonType { return this._ionType }
-    value(): any { return this._value }
+    // implements _IonValue
+    _annotations(): string[] { return this.__annotations }
+    _fieldName(): string     { return this.__fieldName }
+    _isNull(): boolean       { return this.__isNull }   // TBD can a caller invoke writeString(null) ?
+    _type(): IonType         { return this.__ionType }
+    _value(): any            { return this.__value }
 }
 
 class Hasher {
-    private readonly ihp: IonHasherProvider;
-    private currentHasher: Serializer;
-    private readonly hasherStack: Serializer[] = [];
+    private readonly _ihp: IonHasherProvider;
+    private _currentHasher: _Serializer;
+    private readonly _hasherStack: _Serializer[] = [];
 
     constructor(ihp: IonHasherProvider) {
-        this.ihp = ihp;
-        this.currentHasher = new Serializer(this.ihp(), 0);
-        this.hasherStack.push(this.currentHasher);
+        this._ihp = ihp;
+        this._currentHasher = new _Serializer(this._ihp(), 0);
+        this._hasherStack.push(this._currentHasher);
     }
 
-    scalar(ionValue: IonValue) {
-        this.currentHasher.scalar(ionValue);
+    _scalar(ionValue: _IonValue) {
+        this._currentHasher._scalar(ionValue);
     }
 
-    stepIn(ionValue: IonValue) {
-        let hf = this.currentHasher.hashFunction;
-        if (this.currentHasher instanceof StructSerializer) {
-            hf = this.ihp();
+    _stepIn(ionValue: _IonValue) {
+        let hf = this._currentHasher._hashFunction;
+        if (this._currentHasher instanceof _StructSerializer) {
+            hf = this._ihp();
         }
 
-        if (ionValue.type().name == 'struct') {   // TBD
-            this.currentHasher = new StructSerializer(hf, this.depth(), this.ihp);
+        if (ionValue._type().name == 'struct') {   // TBD
+            this._currentHasher = new _StructSerializer(hf, this._depth(), this._ihp);
         } else {
-            this.currentHasher = new Serializer(hf, this.depth());
+            this._currentHasher = new _Serializer(hf, this._depth());
         }
 
-        this.hasherStack.push(this.currentHasher);
-        this.currentHasher.stepIn(ionValue);
+        this._hasherStack.push(this._currentHasher);
+        this._currentHasher._stepIn(ionValue);
     }
 
-    stepOut() {
-        if (this.depth() == 0) {
+    _stepOut() {
+        if (this._depth() == 0) {
             throw new Error("Hasher cannot stepOut any further");
         }
 
-        this.currentHasher.stepOut();
-        let poppedHasher = this.hasherStack.pop();
-        this.currentHasher = this.hasherStack[this.hasherStack.length - 1];
+        this._currentHasher._stepOut();
+        let poppedHasher = this._hasherStack.pop();
+        this._currentHasher = this._hasherStack[this._hasherStack.length - 1];
 
-        if (this.currentHasher instanceof StructSerializer) {
-            let digest = poppedHasher.digest();
-            this.currentHasher.appendFieldHash(digest);
+        if (this._currentHasher instanceof _StructSerializer) {
+            let digest = poppedHasher._digest();
+            this._currentHasher._appendFieldHash(digest);
         }
     }
 
-    digest(): Buffer {
-        if (this.depth() != 0) {
+    _digest(): Buffer {
+        if (this._depth() != 0) {
             // TBD throw exception
         }
-        return this.currentHasher.digest();
+        return this._currentHasher._digest();
     }
 
-    private depth(): number {
-        return this.hasherStack.length - 1;
+    private _depth(): number {
+        return this._hasherStack.length - 1;
     }
 }
 
-class Serializer {
-    private static readonly serializers = {
+class _Serializer {
+    private static readonly _serializers = {
         "null":      (value, writer) => { writer.writeNull() },
         "bool":      (value, writer) => { writer.writeBoolean(value) },
         "int":       (value, writer) => { writer.writeInt(value) },
@@ -351,74 +354,74 @@ class Serializer {
         "blob":      (value, writer) => { writer.writeBlob(value) },
     };
 
-    hashFunction: IonHasher;
-    private hasContainerAnnotations = false;
-    private depth: number;
+    _hashFunction: IonHasher;
+    private _hasContainerAnnotations = false;
+    private readonly _depth: number;
 
     constructor(hashFunction, depth) {
-        this.hashFunction = hashFunction;
-        this.depth = depth;
+        this._hashFunction = hashFunction;
+        this._depth = depth;
     }
 
-    handleFieldName(fieldName) {
-        if (fieldName != undefined && this.depth > 0) {
-            this.writeSymbol(fieldName);
+    _handleFieldName(fieldName) {
+        if (fieldName != undefined && this._depth > 0) {
+            this._writeSymbol(fieldName);
         }
     }
 
-    private handleAnnotationsBegin(ionValue, isContainer=false) {
-        let annotations = ionValue.annotations();
+    private _handleAnnotationsBegin(ionValue, isContainer=false) {
+        let annotations = ionValue._annotations();
         if (annotations.length > 0) {
-            this.beginMarker();
-            this.update(TQ_ANNOTATED_VALUE);
+            this._beginMarker();
+            this._update(_TQ_ANNOTATED_VALUE);
             for (let annotation of annotations) {
-                this.writeSymbol(annotation);
+                this._writeSymbol(annotation);
             }
             if (isContainer) {
-                this.hasContainerAnnotations = true;
+                this._hasContainerAnnotations = true;
             }
         }
     }
 
-    private handleAnnotationsEnd(ionValue, isContainer=false) {
-        if ((ionValue && ionValue.annotations().length > 0)
-                || (isContainer && this.hasContainerAnnotations)) {
-            this.endMarker();
+    private _handleAnnotationsEnd(ionValue, isContainer=false) {
+        if ((ionValue && ionValue._annotations().length > 0)
+                || (isContainer && this._hasContainerAnnotations)) {
+            this._endMarker();
             if (isContainer) {
-                this.hasContainerAnnotations = false;
+                this._hasContainerAnnotations = false;
             }
         }
     }
 
-    protected update(bytes: Uint8Array) { this.hashFunction.update(bytes) }
-    protected beginMarker() { this.hashFunction.update(BEGIN_MARKER) }
-    protected endMarker()   { this.hashFunction.update(END_MARKER) }
+    protected _update(bytes: Uint8Array) { this._hashFunction.update(bytes) }
+    protected _beginMarker() { this._hashFunction.update(_BEGIN_MARKER) }
+    protected _endMarker()   { this._hashFunction.update(_END_MARKER) }
 
     // TBD merge with scalar()?
-    private writeSymbol(token) {
-        this.beginMarker();
-        let scalarBytes = this.getBytes(IonTypes.SYMBOL, token, false);
-        let [tq, representation] = this.scalarOrNullSplitParts(IonTypes.SYMBOL, false, scalarBytes);
+    private _writeSymbol(token) {
+        this._beginMarker();
+        let scalarBytes = this._getBytes(IonTypes.SYMBOL, token, false);
+        let [tq, representation] = this._scalarOrNullSplitParts(IonTypes.SYMBOL, false, scalarBytes);
 
-        this.update(new Uint8Array([tq]));
+        this._update(new Uint8Array([tq]));
         if (representation.length > 0) {
-            this.update(escape(representation));
+            this._update(_escape(representation));
         }
-        this.endMarker();
+        this._endMarker();
     }
 
-    private getBytes(type, value, isNull) {
+    private _getBytes(type, value, isNull) {
         if (isNull) {
             return [type.bid << 4 | 0x0F];
         } else {
             let writer = ion.makeBinaryWriter();
-            Serializer.serializers[type.name](value, writer);
+            _Serializer._serializers[type.name](value, writer);
             writer.close();
             return writer.getBytes().slice(4);
         }
     }
 
-    private getLengthLength(bytes): number {
+    private _getLengthLength(bytes): number {
         if ((bytes[0] & 0x0F) == 0x0E) {
             // read subsequent byte(s) as the "length" field
             for (let i = 1; i < bytes.length; i++) {
@@ -431,8 +434,8 @@ class Serializer {
         return 0;
     }
 
-    private scalarOrNullSplitParts(type, isNull, bytes) {
-        let offset = 1 + this.getLengthLength(bytes);
+    private _scalarOrNullSplitParts(type, isNull, bytes) {
+        let offset = 1 + this._getLengthLength(bytes);
 
         // the representation is everything after TL (first byte) and length
         let representation = bytes.slice(offset);
@@ -457,70 +460,70 @@ class Serializer {
     }
 
 
-    scalar(ionValue: IonValue) {
-        this.handleAnnotationsBegin(ionValue);
-        this.beginMarker();
-        let scalarBytes = this.getBytes(ionValue.type(), ionValue.value(), ionValue.isNull());
-        let [tq, representation] = this.scalarOrNullSplitParts(ionValue.type(), ionValue.isNull(), scalarBytes);
-        this.update(new Uint8Array([tq]));
+    _scalar(ionValue: _IonValue) {
+        this._handleAnnotationsBegin(ionValue);
+        this._beginMarker();
+        let scalarBytes = this._getBytes(ionValue._type(), ionValue._value(), ionValue._isNull());
+        let [tq, representation] = this._scalarOrNullSplitParts(ionValue._type(), ionValue._isNull(), scalarBytes);
+        this._update(new Uint8Array([tq]));
         if (representation.length > 0) {
-            this.update(escape(representation));
+            this._update(_escape(representation));
         }
-        this.endMarker();
-        this.handleAnnotationsEnd(ionValue);
+        this._endMarker();
+        this._handleAnnotationsEnd(ionValue);
     }
 
-    stepIn(ionValue: IonValue) {
-        this.handleFieldName(ionValue.fieldName());
-        this.handleAnnotationsBegin(ionValue, true);
-        this.beginMarker();
-        let tq = TQ[ionValue.type().name.toUpperCase()];   // TBD  rationalize this
-        if (ionValue.isNull()) {
+    _stepIn(ionValue: _IonValue) {
+        this._handleFieldName(ionValue._fieldName());
+        this._handleAnnotationsBegin(ionValue, true);
+        this._beginMarker();
+        let tq = _TQ[ionValue._type().name.toUpperCase()];   // TBD  rationalize this
+        if (ionValue._isNull()) {
             tq |= 0x0F;
         }
-        this.update(new Uint8Array([tq]));
+        this._update(new Uint8Array([tq]));
     }
 
-    stepOut() {
-        this.endMarker();
-        this.handleAnnotationsEnd(null, true);
+    _stepOut() {
+        this._endMarker();
+        this._handleAnnotationsEnd(null, true);
     }
 
-    digest() { return this.hashFunction.digest() }
+    _digest() { return this._hashFunction.digest() }
 }
 
-class StructSerializer extends Serializer {
-    scalarSerializer: Serializer;
-    fieldHashes: number[][] = [];
+class _StructSerializer extends _Serializer {
+    _scalarSerializer: _Serializer;
+    _fieldHashes: number[][] = [];
 
     constructor(hashFunction, depth, hashFunctionProvider) {
         super(hashFunction, depth);
-        this.scalarSerializer = new Serializer(hashFunctionProvider(), depth + 1);
-        this.fieldHashes = [];
+        this._scalarSerializer = new _Serializer(hashFunctionProvider(), depth + 1);
+        this._fieldHashes = [];
     }
 
-    scalar(value) {
-        this.scalarSerializer.handleFieldName(value.fieldName());
-        this.scalarSerializer.scalar(value);
-        let digest = this.scalarSerializer.digest();
-        this.appendFieldHash(digest);
+    _scalar(value) {
+        this._scalarSerializer._handleFieldName(value._fieldName());
+        this._scalarSerializer._scalar(value);
+        let digest = this._scalarSerializer._digest();
+        this._appendFieldHash(digest);
     }
 
-    stepOut() {
-        this.fieldHashes.sort(byteArrayComparator);
-        for (let digest of this.fieldHashes) {
-            this.update(escape(digest));
+    _stepOut() {
+        this._fieldHashes.sort(_byteArrayComparator);
+        for (let digest of this._fieldHashes) {
+            this._update(_escape(digest));
         }
-        super.stepOut();
+        super._stepOut();
     }
 
-    appendFieldHash(digest) {
-        this.fieldHashes.push(digest);
+    _appendFieldHash(digest) {
+        this._fieldHashes.push(digest);
     }
 }
 
 
-export function byteArrayComparator(a: number[], b: number[]) {
+export function _byteArrayComparator(a: number[], b: number[]) {
     let i = 0;
     while (i < a.length && i < b.length) {
         let a_byte = a[i];
@@ -545,30 +548,30 @@ export function byteArrayComparator(a: number[], b: number[]) {
     }
 }
 
-const BEGIN_MARKER_BYTE = 0x0B;
-const END_MARKER_BYTE = 0x0E;
-const ESCAPE_BYTE = 0x0C;
-const BEGIN_MARKER = new Uint8Array([BEGIN_MARKER_BYTE]);
-const END_MARKER = new Uint8Array([END_MARKER_BYTE]);
+const _BEGIN_MARKER_BYTE = 0x0B;
+const _END_MARKER_BYTE = 0x0E;
+const _ESCAPE_BYTE = 0x0C;
+const _BEGIN_MARKER = new Uint8Array([_BEGIN_MARKER_BYTE]);
+const _END_MARKER = new Uint8Array([_END_MARKER_BYTE]);
 
-const TQ = {};
+const _TQ = {};
 for (let ionType in IonTypes) {
-    TQ[ionType] = IonTypes[ionType].bid << 4;
+    _TQ[ionType] = IonTypes[ionType].bid << 4;
 }
-const TQ_SYMBOL_SID0 = new Uint8Array([0x71]);
-const TQ_ANNOTATED_VALUE = new Uint8Array([0xE0]);
+const _TQ_SYMBOL_SID0 = new Uint8Array([0x71]);
+const _TQ_ANNOTATED_VALUE = new Uint8Array([0xE0]);
 
 
-export function escape(bytes) {
+export function _escape(bytes) {
     let escapedBytes = bytes;
     bytes.forEach((b) => {
-        if (b == BEGIN_MARKER_BYTE || b == END_MARKER_BYTE || b == ESCAPE_BYTE) {
+        if (b == _BEGIN_MARKER_BYTE || b == _END_MARKER_BYTE || b == _ESCAPE_BYTE) {
             // found a byte that needs to be escaped;  build a new byte array that
             // escapes that byte as well as any others
             escapedBytes = [];
             bytes.forEach((c) => {
-                if (c == BEGIN_MARKER_BYTE || c == END_MARKER_BYTE || c == ESCAPE_BYTE) {
-                    escapedBytes.push(ESCAPE_BYTE);
+                if (c == _BEGIN_MARKER_BYTE || c == _END_MARKER_BYTE || c == _ESCAPE_BYTE) {
+                    escapedBytes.push(_ESCAPE_BYTE);
                 }
                 escapedBytes.push(c);
             });
@@ -576,26 +579,5 @@ export function escape(bytes) {
         }
     });
     return escapedBytes;
-}
-
-
-
-
-// TBD remove
-let write = function (s) {
-    process.stdout.write(s);
-};
-
-let writeln = function (s = "") {
-    write(s + "\n");
-};
-
-function toHexString(byteArray) {
-    let sb = '';
-    byteArray.forEach(b => {
-        if (sb != '') { sb += ' ' }
-        sb += ('0' + ((b as number) & 0xFF).toString(16)).slice(-2);
-    });
-    return sb;
 }
 

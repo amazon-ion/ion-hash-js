@@ -2,7 +2,7 @@
 
 const { registerSuite } = intern.getPlugin('interface.object');
 const { assert } = intern.getPlugin('chai');
-import { byteArrayComparator } from '../src/IonHash';
+import { _byteArrayComparator } from '../src/IonHash';
 
 registerSuite("byteArrayComparator", {
     equals: () => { test([0x01, 0x02, 0x03], [0x01, 0x02, 0x03], 0); },
@@ -20,5 +20,5 @@ registerSuite("byteArrayComparator", {
     },
 });
 
-let test = function(a, b, expected) { assert.equal(byteArrayComparator(a, b), expected); };
+let test = function(a, b, expected) { assert.equal(_byteArrayComparator(a, b), expected); };
 

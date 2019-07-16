@@ -34,9 +34,9 @@ module.exports = function(grunt) {
         options: {
           reporters: ['pretty'],
           suites: [
-            //'dist/commonjs/es5/**/*.js',
+            'dist/commonjs/es5/**/*.js',
             //'dist/commonjs/es5/**/BigList*.js',
-            'dist/commonjs/es5/**/IonHash*.js',
+            //'dist/commonjs/es5/**/IonHash*.js',
           ],
         },
       },
