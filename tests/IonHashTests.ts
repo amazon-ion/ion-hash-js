@@ -5,7 +5,7 @@ const { assert } = intern.getPlugin('chai');
 import { readFileSync } from 'fs';
 
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
-import { hashReader, hashWriter, IonHasher } from '../src/IonHash';
+import { makeHashReader, makeHashWriter, IonHasher } from '../src/IonHash';
 import { toHexString, writeln } from '../src/util';
 import { testIonHasherProvider, toString, writeTo } from './testutil';
 
@@ -83,9 +83,9 @@ function getExpectedDigest(expect): string {
 
 function runReaderTest(ionStr, algorithm, expect) {
     let expectedDigest = getExpectedDigest(expect);
-    let hr = hashReader(ion.makeReader(ionStr), testIonHasherProvider);
-    traverse(hr);
-    let actualDigest = toHexString(hr.digest());
+    let hashReader = makeHashReader(ion.makeReader(ionStr), testIonHasherProvider);
+    traverse(hashReader);
+    let actualDigest = toHexString(hashReader.digest());
 
     assert.equal(actualDigest, expectedDigest);
 }
@@ -94,9 +94,9 @@ function runWriterTest(ionStr, algorithm, expect) {
     let expectedDigest = getExpectedDigest(expect);
     let reader = ion.makeReader(ionStr);
     let type = reader.next();
-    let hw = hashWriter(ion.makeBinaryWriter(), testIonHasherProvider);
-    writeTo(reader, type, hw);
-    let actualDigest = toHexString(hw.digest());
+    let hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider);
+    writeTo(reader, type, hashWriter);
+    let actualDigest = toHexString(hashWriter.digest());
 
     assert.equal(actualDigest, expectedDigest);
 }

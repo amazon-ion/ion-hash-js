@@ -2,7 +2,6 @@
 // TBD use uint8array instead of number[] ?
 // TBD use rewire to gain access to 'private' functions for testing
 // TBD should HashReader/HashWriter be interfaces that extend Reader/Writer?
-// TBD rename hashReader/hashWriter functions so callers can use those as variable names
 // TBD turn "--strictNullChecks" on
 
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
@@ -16,11 +15,11 @@ import { TypeCodes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commo
 
 import { createHash, Hash } from 'crypto';
 
-export function hashReader(reader, hashFunctionProvider) {
+export function makeHashReader(reader, hashFunctionProvider) {
     return new HashReaderImpl(reader, hashFunctionProvider);
 }
 
-export function hashWriter(writer, hashFunctionProvider) {
+export function makeHashWriter(writer, hashFunctionProvider) {
     return new HashWriterImpl(writer, hashFunctionProvider);
 }
 

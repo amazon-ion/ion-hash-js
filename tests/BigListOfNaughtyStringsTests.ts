@@ -5,7 +5,7 @@ const { assert } = intern.getPlugin('chai');
 import { readFileSync } from 'fs';
 
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
-import { hashReader, hashWriter, IonHasher } from '../src/IonHash';
+import { makeHashReader, makeHashWriter, IonHasher } from '../src/IonHash';
 import { toHexString, writeln } from '../src/util';
 import { testIonHasherProvider, writeTo } from './testutil';
 
@@ -147,24 +147,24 @@ registerSuite('BigListOfNaughtyStringsTests', suite);
 
 function runTest(testString) {
     let tv = new TestValue(testString);
-    let hw;
+    let hashWriter;
     try {
         let reader = ion.makeReader(tv.ion);
         let type = reader.next();
-        hw = hashWriter(ion.makeBinaryWriter(), testIonHasherProvider);
-        writeTo(reader, type, hw);
+        hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider);
+        writeTo(reader, type, hashWriter);
     } catch (e) {
         if (tv.validIon) {
             throw e;
         }
     }
 
-    let hr;
+    let hashReader;
     try {
         let reader = ion.makeReader(tv.ion);
-        hr = hashReader(reader, testIonHasherProvider);
-        hr.next();
-        hr.next();
+        hashReader = makeHashReader(reader, testIonHasherProvider);
+        hashReader.next();
+        hashReader.next();
     } catch (e) {
         writeln(e);
         if (tv.validIon) {
@@ -173,8 +173,8 @@ function runTest(testString) {
     }
 
     if (tv.validIon == null || tv.validIon) {
-        assert.equal(toHexString(hw.digest()),
-            toHexString(hr.digest()));
+        assert.equal(toHexString(hashWriter.digest()),
+            toHexString(hashReader.digest()));
     }
 }
 
