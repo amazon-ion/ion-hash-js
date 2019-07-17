@@ -9,11 +9,13 @@ import { TypeCodes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commo
 
 import { createHash, Hash } from 'crypto';
 
-export function makeHashReader(reader, hashFunctionProvider): IonHashReader {
+export function makeHashReader(reader: IonReader,
+                               hashFunctionProvider: IonHasherProvider): IonHashReader {
     return new _HashReaderImpl(reader, hashFunctionProvider);
 }
 
-export function makeHashWriter(writer, hashFunctionProvider): IonHashWriter {
+export function makeHashWriter(writer: IonWriter,
+                               hashFunctionProvider: IonHasherProvider): IonHashWriter {
     return new _HashWriterImpl(writer, hashFunctionProvider);
 }
 
@@ -34,28 +36,18 @@ export interface IonHasher {
     digest(): Buffer;
 }
 
-export function cryptoIonHasherProvider(algorithm: string) {
-    return new _CryptoIonHasher(algorithm);
+export function cryptoIonHasherProvider(algorithm: string): IonHasherProvider {
+    return (): IonHasher => { return new _CryptoIonHasher(algorithm) };
 }
 
 class _CryptoIonHasher implements IonHasher {
-    private readonly _algorithm: string;
-    private _hash: Hash;
+    private readonly _hash: Hash;
 
     constructor(algorithm: string) {
-        this._algorithm = algorithm;
-        this._hash = createHash(this._algorithm);
+        this._hash = createHash(algorithm);
     }
-
-    update(bytes: Uint8Array) {
-        this._hash.update(bytes);
-    }
-
-    digest(): Buffer {
-        let digest = this._hash.digest();
-        this._hash = createHash(this._algorithm);
-        return digest;
-    }
+    update(bytes: Uint8Array) { this._hash.update(bytes) }
+    digest(): Buffer { return this._hash.digest() }
 }
 
 
@@ -384,8 +376,7 @@ class _Serializer {
     }
 
     private _handleAnnotationsEnd(ionValue, isContainer=false) {
-        let annotations = ionValue._annotations();
-        if ((ionValue && annotations && annotations.length > 0)
+        if ((ionValue && ionValue._annotations() && ionValue._annotations().length > 0)
                 || (isContainer && this._hasContainerAnnotations)) {
             this._endMarker();
             if (isContainer) {
