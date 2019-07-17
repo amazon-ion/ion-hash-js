@@ -11,7 +11,7 @@ class TestValue {
     private static ionPrefix = 'ion::';
     private static invalidIonPrefix = 'invalid_ion::';
 
-    readonly validIon: boolean;
+    readonly validIon: boolean | null;
 
     constructor(public ion: string) {
         this.validIon = null;

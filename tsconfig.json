@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": true,
     "sourceMap": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "types": ["intern"],
     "verbose": true
   },

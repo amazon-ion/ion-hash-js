@@ -52,10 +52,10 @@ class _CryptoIonHasher implements IonHasher {
 
 
 interface _IonValue {
-    _annotations(): string[];
-    _fieldName(): string;
+    _annotations(): string[] | undefined;
+    _fieldName(): string | null;
     _isNull(): boolean;
-    _type(): IonType;
+    _type(): IonType | null;
     _value(): any;
 }
 
@@ -64,7 +64,7 @@ class _HashReaderImpl implements IonHashReader, _IonValue {
     private readonly _hashFunctionProvider;
 
     private readonly _hasher: Hasher;
-    private _ionType: IonType;
+    private _ionType: IonType | null;
 
     constructor(reader, hashFunctionProvider) {
         this._reader = reader;
@@ -129,11 +129,11 @@ class _HashReaderImpl implements IonHashReader, _IonValue {
     digest(): Buffer { return this._hasher._digest() }
 
     // implements _IonValue
-    _annotations(): string[] { return this.annotations() }
-    _fieldName(): string     { return this.fieldName() }
-    _isNull(): boolean       { return this.isNull() }
-    _type(): IonType         { return this._ionType }
-    _value(): any            { return this.value() }
+    _annotations(): string[] | undefined { return this.annotations() }
+    _fieldName(): string | null          { return this.fieldName() }
+    _isNull(): boolean                   { return this.isNull() }
+    _type(): IonType | null              { return this._ionType }
+    _value(): any                        { return this.value() }
 }
 
 class _HashWriterImpl implements IonHashWriter, _IonValue {
@@ -142,8 +142,8 @@ class _HashWriterImpl implements IonHashWriter, _IonValue {
     private readonly _hasher: Hasher;
 
     private __ionType: IonType;
-    private __annotations: string[];
-    private __fieldName: string;
+    private __annotations: string[] | undefined;
+    private __fieldName: string | null;
     private __isNull: boolean;
     private __value: any;
 
@@ -267,11 +267,11 @@ class _HashWriterImpl implements IonHashWriter, _IonValue {
     digest(): Buffer { return this._hasher._digest() }
 
     // implements _IonValue
-    _annotations(): string[] { return this.__annotations }
-    _fieldName(): string     { return this.__fieldName }
-    _isNull(): boolean       { return this.__isNull }   // TBD can a caller invoke writeString(null) ?
-    _type(): IonType         { return this.__ionType }
-    _value(): any            { return this.__value }
+    _annotations(): string[] | undefined { return this.__annotations }
+    _fieldName(): string | null          { return this.__fieldName }
+    _isNull(): boolean                   { return this.__isNull }   // TBD can a caller invoke writeString(null) ?
+    _type(): IonType | null              { return this.__ionType }
+    _value(): any                        { return this.__value }
 }
 
 class Hasher {
@@ -295,7 +295,7 @@ class Hasher {
             hf = this._ihp();
         }
 
-        if (ionValue._type().name == 'struct') {   // TBD
+        if (ionValue._type()!.name == 'struct') {   // TBD
             this._currentHasher = new _StructSerializer(hf, this._depth(), this._ihp);
         } else {
             this._currentHasher = new _Serializer(hf, this._depth());
@@ -311,7 +311,7 @@ class Hasher {
         }
 
         this._currentHasher._stepOut();
-        let poppedHasher = this._hasherStack.pop();
+        let poppedHasher = this._hasherStack.pop()!;
         this._currentHasher = this._hasherStack[this._hasherStack.length - 1];
 
         if (this._currentHasher instanceof _StructSerializer) {
@@ -469,7 +469,7 @@ class _Serializer {
         this._handleFieldName(ionValue._fieldName());
         this._handleAnnotationsBegin(ionValue, true);
         this._beginMarker();
-        let tq = _TQ[ionValue._type().name.toUpperCase()];   // TBD  rationalize this
+        let tq = _TQ[ionValue._type()!.name.toUpperCase()];   // TBD  rationalize this
         if (ionValue._isNull()) {
             tq |= 0x0F;
         }
