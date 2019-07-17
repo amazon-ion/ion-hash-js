@@ -6,7 +6,13 @@
 /dist
 /node_modules
 /package-lock.json
+/src/.baseDir.ts
+/src/*.d.ts
 /src/*.js
+/src/*.js.map
+/tests/.baseDir.ts
+/tests/*.d.ts
 /tests/*.js
+/tests/*.js.map
 /tscommand-*
 
