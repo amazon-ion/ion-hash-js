@@ -11,11 +11,7 @@ module.exports = function(grunt) {
     ],
 
     ts: {
-      options: {
-        default: {
-          tsconfig: 'tsconfig.json',
-        },
-      },
+      tsconfig: 'tsconfig.json',
       'commonjs-es5': {
         src: ['tests/**/*.ts'],
         outDir: 'dist/commonjs/es5',

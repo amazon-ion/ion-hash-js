@@ -1,5 +1,3 @@
-/// <reference types="intern" />
-
 const { registerSuite } = intern.getPlugin('interface.object');
 const { assert } = intern.getPlugin('chai');
 import { readFileSync } from 'fs';
