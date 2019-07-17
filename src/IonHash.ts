@@ -330,7 +330,7 @@ class Hasher {
 
     _digest(): Buffer {
         if (this._depth() != 0) {
-            // TBD throw exception
+            throw new Error("A digest may only be provided at the same depth hashing started")
         }
         return this._currentHasher._digest();
     }
@@ -371,7 +371,7 @@ class _Serializer {
 
     private _handleAnnotationsBegin(ionValue, isContainer=false) {
         let annotations = ionValue._annotations();
-        if (annotations.length > 0) {
+        if (annotations && annotations.length > 0) {
             this._beginMarker();
             this._update(_TQ_ANNOTATED_VALUE);
             for (let annotation of annotations) {
@@ -384,7 +384,8 @@ class _Serializer {
     }
 
     private _handleAnnotationsEnd(ionValue, isContainer=false) {
-        if ((ionValue && ionValue._annotations().length > 0)
+        let annotations = ionValue._annotations();
+        if ((ionValue && annotations && annotations.length > 0)
                 || (isContainer && this._hasContainerAnnotations)) {
             this._endMarker();
             if (isContainer) {
