@@ -4,7 +4,7 @@ const { registerSuite } = intern.getPlugin('interface.object');
 const { assert } = intern.getPlugin('chai');
 import { _byteArrayComparator } from '../src/IonHash';
 
-registerSuite("byteArrayComparator", {
+registerSuite('_byteArrayComparator', {
     equals: () => { test([0x01, 0x02, 0x03], [0x01, 0x02, 0x03], 0); },
     lessThan: () => { test([0x01, 0x02, 0x03], [0x01, 0x02, 0x04], -1); },
     lessThanDueToLength: () => { test([0x01, 0x02, 0x03], [0x01, 0x02, 0x03, 0x04], -1); },
