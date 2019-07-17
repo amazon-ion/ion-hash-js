@@ -14,7 +14,6 @@ module.exports = function(grunt) {
       options: {
         default: {
           tsconfig: 'tsconfig.json',
-          verbose: true,
         },
       },
       'commonjs-es5': {

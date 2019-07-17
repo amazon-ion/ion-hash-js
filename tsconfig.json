@@ -3,6 +3,7 @@
     "types": ["intern"],
     "declaration": true,
     "sourceMap": true,
+    "strictNullChecks": true,
     "verbose": true
   },
   "include": [
