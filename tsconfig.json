@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "types": ["intern"],
     "declaration": true,
     "sourceMap": true,
     "strictNullChecks": false,
+    "types": ["intern"],
     "verbose": true
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "tests/**/*.ts"
   ]
 }
 
