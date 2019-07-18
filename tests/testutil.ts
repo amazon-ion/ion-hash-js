@@ -1,4 +1,5 @@
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
+import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonReader';
 import { IonHasher } from "../src/IonHash";
 
 class IdentityIonHasher implements IonHasher {
@@ -18,6 +19,23 @@ class IdentityIonHasher implements IonHasher {
 export function testIonHasherProvider() {
     return new IdentityIonHasher();
 };
+
+
+export function sexpStringToBytes(sexpStr: string): number[] {
+    let reader = ion.makeReader(sexpStr);
+    reader.next();
+    return sexpToBytes(reader);
+}
+
+export function sexpToBytes(reader: IonReader): number[] {
+    let bytes: number[] = [];
+    reader.stepIn();
+    for (let type; type = reader.next(); ) {
+        bytes.push(reader.numberValue());
+    }
+    reader.stepOut();
+    return bytes;
+}
 
 
 export function toString(reader, type): string {

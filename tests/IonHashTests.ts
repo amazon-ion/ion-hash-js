@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
 import { makeHashReader, makeHashWriter, IonHasher } from '../src/IonHash';
 import { toHexString, writeln } from '../src/util';
-import { testIonHasherProvider, toString, writeTo } from './testutil';
+import { sexpToBytes, testIonHasherProvider, toString, writeTo } from './testutil';
 
 // build the suite based on the contents of ion_hash_tests.ion
 let suites = { };
@@ -109,13 +109,4 @@ function traverse(reader) {
     }
 }
 
-function sexpToBytes(reader): number[] {
-    let bytes: number[] = [];
-    reader.stepIn();
-    for (let type; type = reader.next(); ) {
-        bytes.push(reader.numberValue());
-    }
-    reader.stepOut();
-    return bytes;
-}
 

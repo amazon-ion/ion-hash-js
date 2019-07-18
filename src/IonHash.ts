@@ -211,7 +211,7 @@ class _HashWriterImpl implements IonHashWriter, _IonValue {
             case TypeCodes.STRUCT:       { ionType = IonTypes.STRUCT; break }
         }
         this._hashScalar(ionType, null, annotations);
-        this._writer.writeNull(ionType, annotations);
+        this._writer.writeNull(type, annotations);
     }
     writeString(value: string, annotations?: string[]) {
         this._hashScalar(IonTypes.STRING, value, annotations);
@@ -261,7 +261,7 @@ class _HashWriterImpl implements IonHashWriter, _IonValue {
     }
 
     getBytes      (): Uint8Array { return this._writer.getBytes() }
-    close         ()           { this._writer.close() }
+    close         ()             { }
 
     // implements IonHashWriter
     digest(): Buffer { return this._hasher._digest() }
