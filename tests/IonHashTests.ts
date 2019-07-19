@@ -49,8 +49,12 @@ for (let type; type = reader.next(); ) {
         }
 
         if (algorithm == 'identity') {   // TBD remove to enable MD5 tests
-            //suites['ReaderTest'][theTestName] = () => { runReaderTest(ionStr, algorithm, expects[algorithm]) };
-            suites['WriterTest'][theTestName] = () => { runWriterTest(ionStr, algorithm, expects[algorithm]) };
+            suites['ReaderTest'][theTestName] = () => {
+                test(ionStr, algorithm, expects[algorithm], readerDigester);
+            };
+            suites['WriterTest'][theTestName] = () => {
+                test(ionStr, algorithm, expects[algorithm], writerDigester);
+            };
         }
     }
     testCount++;
@@ -64,6 +68,51 @@ for (const suite in suites) {
     registerSuite('IonHashTests.' + suite, suites[suite]);
 }
 
+function test(ionStr: string,
+              algorithm: string,
+              expect: string,
+              digestFn: (ionStr: string, algorithm: string, hasherLog: string[]) => void) {
+
+    let expectedIonHasherLog = getExpectedIonHasherLog(expect);
+    let actualIonHasherLog: string[] = [];
+
+    digestFn(ionStr, algorithm, actualIonHasherLog);
+
+    if (expectedIonHasherLog.length == 1
+        && expectedIonHasherLog[0].startsWith('final_digest::')) {
+        assert.deepEqual('final_' + actualIonHasherLog.pop(), expectedIonHasherLog[0]);
+    } else {
+        assert.deepEqual(actualIonHasherLog, expectedIonHasherLog);
+    }
+}
+
+function readerDigester(ionStr: string, algorithm: string, hasherLog: string[]) {
+    function traverse(reader) {
+        for (let type; type = reader.next(); ) {
+            if (type.container && !reader.isNull()) {
+                reader.stepIn();
+                traverse(reader);
+                reader.stepOut();
+            }
+        }
+    }
+
+    let hashReader = makeHashReader(
+        ion.makeReader(ionStr),
+        testIonHasherProvider(algorithm, hasherLog));
+    traverse(hashReader);
+    hashReader.digest();
+}
+
+function writerDigester(ionStr: string, algorithm: string, hasherLog: string[]) {
+    let reader = ion.makeReader(ionStr);
+    let type = reader.next();
+    let hashWriter = makeHashWriter(
+        ion.makeBinaryWriter(),
+        testIonHasherProvider('identity', hasherLog));
+    writeTo(reader, type, hashWriter);
+    hashWriter.digest();
+}
 
 function getExpectedIonHasherLog(expect): string[] {
     let log: string[] = [];
@@ -72,62 +121,13 @@ function getExpectedIonHasherLog(expect): string[] {
     reader.stepIn();
     for (let type; type = reader.next(); ) {
         let annotation = reader.annotations()[0];
-        let byteString = toHexString(sexpToBytes(reader));
+        let byteString = annotation + '::(' + toHexString(sexpToBytes(reader)) + ')';
         if (annotation == 'final_digest') {
-            log = [annotation + '::(' + byteString + ')'];
+            log = [byteString];
         } else {
-            log.push(annotation + '::(' + byteString + ')');
+            log.push(byteString);
         }
     }
     return log;
 }
-
-function runReaderTest(ionStr, algorithm, expect) {
-    let expectedIonHasherLog = getExpectedIonHasherLog(expect);
-    let actualIonHasherLog: string[] = [];
-
-    let hashReader = makeHashReader(
-            ion.makeReader(ionStr),
-            testIonHasherProvider('identity', actualIonHasherLog));
-    traverse(hashReader);
-    hashReader.digest();
-
-    if (expectedIonHasherLog.length == 1
-            && expectedIonHasherLog[0].startsWith('final_digest::')) {
-        assert.deepEqual('final_' + actualIonHasherLog.pop(), expectedIonHasherLog[0]);
-    } else {
-        assert.deepEqual(actualIonHasherLog, expectedIonHasherLog);
-    }
-}
-
-function runWriterTest(ionStr, algorithm, expect) {
-    let expectedIonHasherLog = getExpectedIonHasherLog(expect);
-    let actualIonHasherLog: string[] = [];
-
-    let reader = ion.makeReader(ionStr);
-    let type = reader.next();
-    let hashWriter = makeHashWriter(
-        ion.makeBinaryWriter(),
-        testIonHasherProvider('identity', actualIonHasherLog));
-    writeTo(reader, type, hashWriter);
-    hashWriter.digest();
-
-    if (expectedIonHasherLog.length == 1
-            && expectedIonHasherLog[0].startsWith('final_digest::')) {
-        assert.deepEqual('final_' + actualIonHasherLog.pop(), expectedIonHasherLog[0]);
-    } else {
-        assert.deepEqual(actualIonHasherLog, expectedIonHasherLog);
-    }
-}
-
-function traverse(reader) {
-    for (let type; type = reader.next(); ) {
-        if (type.container && !reader.isNull()) {
-            reader.stepIn();
-            traverse(reader);
-            reader.stepOut();
-        }
-    }
-}
-
 
