@@ -30,15 +30,10 @@ interface _IonValue {
 }
 
 export class _HashReaderImpl implements IonHashReader, _IonValue {
-    private readonly _reader: IonReader;
-    private readonly _hashFunctionProvider;
-
     private readonly _hasher: Hasher;
     private _ionType: IonType | null = null;
 
-    constructor(reader, hashFunctionProvider) {
-        this._reader = reader;
-        this._hashFunctionProvider = hashFunctionProvider;
+    constructor(private readonly _reader: IonReader, private readonly _hashFunctionProvider) {
         this._hasher = new Hasher(this._hashFunctionProvider);
     }
 
@@ -107,8 +102,6 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
 }
 
 export class _HashWriterImpl implements IonHashWriter, _IonValue {
-    private readonly _writer: IonWriter;
-    private readonly _hashFunctionProvider;
     private readonly _hasher: Hasher;
 
     private __ionType: IonType | null = null;
@@ -117,9 +110,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     private __isNull: boolean = false;
     private __value: any;
 
-    constructor(writer, hashFunctionProvider) {
-        this._writer = writer;
-        this._hashFunctionProvider = hashFunctionProvider;
+    constructor(private readonly _writer, private readonly _hashFunctionProvider) {
         this._hasher = new Hasher(this._hashFunctionProvider);
     }
 
@@ -245,12 +236,10 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
 }
 
 class Hasher {
-    private readonly _ihp: IonHasherProvider;
     private _currentHasher: _Serializer;
     private readonly _hasherStack: _Serializer[] = [];
 
-    constructor(ihp: IonHasherProvider) {
-        this._ihp = ihp;
+    constructor(private readonly _ihp: IonHasherProvider) {
         this._currentHasher = new _Serializer(this._ihp(), 0);
         this._hasherStack.push(this._currentHasher);
     }
@@ -316,13 +305,9 @@ class _Serializer {
         "blob":      (value, writer) => { writer.writeBlob(value) },
     };
 
-    _hashFunction: IonHasher;
     private _hasContainerAnnotations = false;
-    private readonly _depth: number;
 
-    constructor(hashFunction, depth) {
-        this._hashFunction = hashFunction;
-        this._depth = depth;
+    constructor(public _hashFunction: IonHasher, private readonly _depth: number) {
     }
 
     _handleFieldName(fieldName) {
