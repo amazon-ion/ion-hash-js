@@ -4,6 +4,7 @@
 /.idea
 /.tscache
 /dist
+/docs
 /node_modules
 /package-lock.json
 /src/.baseDir.ts

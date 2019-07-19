@@ -1,14 +1,13 @@
 module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-ts');
+  grunt.loadNpmTasks('grunt-typedoc');
   grunt.loadNpmTasks('intern');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
-    clean: [
-      'dist',
-    ],
+    clean: ['dist', 'docs'],
 
     ts: {
       tsconfig: 'tsconfig.json',
@@ -24,11 +23,13 @@ module.exports = function(grunt) {
     intern: {
       es5: {
         options: {
-          reporters: ['pretty'],
+          //reporters: ['pretty'],
+          reporters: ['runner'],
           suites: [
-            'dist/commonjs/es5/**/*.js',
-            //'dist/commonjs/es5/**/BigList*.js',
+            //'dist/commonjs/es5/**/*.js',
+            //'!dist/commonjs/es5/**/BigList*.js',
             //'dist/commonjs/es5/**/IonHash*.js',
+            'dist/commonjs/es5/**/FieldnameB*.js',
           ],
         },
       },
@@ -37,18 +38,23 @@ module.exports = function(grunt) {
     typedoc: {
       build: {
         options: {
+          name: 'ion-hash-js',
+          out: 'docs/api',
           module: 'commonjs',
           target: 'es5',
-          out: 'docs/api',
-          name: 'ion-hash-js',
+          excludePrivate: true,
+          hideGenerator: true,
         },
-        src: 'src/**/*',
+        src: 'src/**/*.ts',
       },
     },
   });
 
   grunt.registerTask('build',   ['clean', 'ts:commonjs-es5']);
   grunt.registerTask('test',    ['build', 'intern:es5']);
+  grunt.registerTask('doc',     ['typedoc']);
+
   grunt.registerTask('default', ['test']);
+  grunt.registerTask('release', ['test', 'doc']);
 };
 
