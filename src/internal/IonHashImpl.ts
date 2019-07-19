@@ -34,7 +34,7 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     private readonly _hashFunctionProvider;
 
     private readonly _hasher: Hasher;
-    private _ionType: IonType | null;
+    private _ionType: IonType | null = null;
 
     constructor(reader, hashFunctionProvider) {
         this._reader = reader;
@@ -111,10 +111,10 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     private readonly _hashFunctionProvider;
     private readonly _hasher: Hasher;
 
-    private __ionType: IonType;
+    private __ionType: IonType | null = null;
     private __annotations: string[] | undefined;
-    private __fieldName: string | null;
-    private __isNull: boolean;
+    private __fieldName: string | null = null;
+    private __isNull: boolean = false;
     private __value: any;
 
     constructor(writer, hashFunctionProvider) {
