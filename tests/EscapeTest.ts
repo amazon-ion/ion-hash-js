@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getPlugin('interface.object');
 const { assert } = intern.getPlugin('chai');
-import { _escape } from '../src/IonHash';
+import { _escape } from '../src/internal/IonHashImpl';
 
 registerSuite('_escape', {
     empty: () => { test([], []); },

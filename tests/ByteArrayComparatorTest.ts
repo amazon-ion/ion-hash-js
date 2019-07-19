@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getPlugin('interface.object');
 const { assert } = intern.getPlugin('chai');
-import { _byteArrayComparator } from '../src/IonHash';
+import { _byteArrayComparator } from '../src/internal/IonHashImpl';
 
 registerSuite('_byteArrayComparator', {
     equals: () => { test([0x01, 0x02, 0x03], [0x01, 0x02, 0x03], 0); },

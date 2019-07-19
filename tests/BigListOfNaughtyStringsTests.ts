@@ -3,9 +3,8 @@ const { assert } = intern.getPlugin('chai');
 import { readFileSync } from 'fs';
 
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
-import { makeHashReader, makeHashWriter, IonHasher } from '../src/IonHash';
-import { toHexString, writeln } from '../src/util';
-import { testIonHasherProvider, writeTo } from './testutil';
+import { makeHashReader, makeHashWriter } from '../src/IonHash';
+import { testIonHasherProvider, toHexString, writeln, writeTo } from './testutil';
 
 class TestValue {
     private static ionPrefix = 'ion::';

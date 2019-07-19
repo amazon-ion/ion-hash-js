@@ -2,7 +2,7 @@ const { registerSuite } = intern.getPlugin('interface.object');
 const { assert } = intern.getPlugin('chai');
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
 import { makeHashReader, makeHashWriter } from '../src/IonHash';
-import {sexpStringToBytes, testIonHasherProvider, toHexString, writeln, writeTo} from './testutil';
+import { sexpStringToBytes, testIonHasherProvider, writeTo } from './testutil';
 
 registerSuite('FieldnameBehavior', {
     null:       () => { test("null", "(0x0b 0x0f 0x0e)") },
