@@ -6,13 +6,20 @@ import { createHash, Hash } from 'crypto';
 
 class IdentityIonHasher implements IonHasher {
     private allBytes: number[] = [];
+
+    constructor(private readonly log: string[] = []) {
+    }
+
     update(bytes: Uint8Array) {
         for (let i = 0; i < bytes.length; i++) {
             this.allBytes.push(bytes[i]);
         }
+        this.log.push('update::(' + toHexString(bytes) + ')');
     }
+
     digest(): Buffer {
         let digest = this.allBytes;
+        this.log.push('digest::(' + toHexString(digest) + ')');
         this.allBytes = [];
         return Buffer.from(digest);
     }
@@ -20,30 +27,30 @@ class IdentityIonHasher implements IonHasher {
 
 class CryptoTestIonHasher implements IonHasher {
     private hash: Hash;
-    private updates: Uint8Array[] = [];
-    private digests: Uint8Array[] = [];
 
-    constructor(private readonly algorithm: string) {
+    constructor(private readonly algorithm: string, private readonly log: string[] = []) {
         this.hash = createHash(algorithm);
     }
+
     update(bytes: Uint8Array) {
         this.hash.update(bytes);
-        this.updates.push(bytes);
+        this.log.push('update::(' + toHexString(bytes) + ')');
     }
+
     digest(): Buffer {
         let digest = this.hash.digest();
-        this.digests.push(digest);
+        this.log.push('digest::(' + toHexString(digest) + ')');
         this.hash = createHash(this.algorithm);
         return digest;
     }
 }
 
-export function testIonHasherProvider(algorithm: string): IonHasherProvider {
+export function testIonHasherProvider(algorithm: string, log?: string[]): IonHasherProvider {
     return (): IonHasher => {
         if (algorithm == 'identity') {
-            return new IdentityIonHasher();
+            return new IdentityIonHasher(log);
         } else {
-            return new CryptoTestIonHasher(algorithm);
+            return new CryptoTestIonHasher(algorithm, log);
         }
     };
 }
