@@ -80,7 +80,7 @@ function getExpectedDigest(expect): string {
 
 function runReaderTest(ionStr, algorithm, expect) {
     let expectedDigest = getExpectedDigest(expect);
-    let hashReader = makeHashReader(ion.makeReader(ionStr), testIonHasherProvider);
+    let hashReader = makeHashReader(ion.makeReader(ionStr), testIonHasherProvider('identity'));
     traverse(hashReader);
     let actualDigest = toHexString(hashReader.digest());
 
@@ -91,7 +91,7 @@ function runWriterTest(ionStr, algorithm, expect) {
     let expectedDigest = getExpectedDigest(expect);
     let reader = ion.makeReader(ionStr);
     let type = reader.next();
-    let hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider);
+    let hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider('identity'));
     writeTo(reader, type, hashWriter);
     let actualDigest = toHexString(hashWriter.digest());
 

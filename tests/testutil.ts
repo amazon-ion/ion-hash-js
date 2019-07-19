@@ -1,6 +1,8 @@
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
 import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonReader';
-import { IonHasher } from "../src/IonHash";
+import {IonHasher, IonHasherProvider} from "../src/IonHash";
+
+import { createHash, Hash } from 'crypto';
 
 class IdentityIonHasher implements IonHasher {
     private allBytes: number[] = [];
@@ -14,11 +16,37 @@ class IdentityIonHasher implements IonHasher {
         this.allBytes = [];
         return Buffer.from(digest);
     }
-};
+}
 
-export function testIonHasherProvider() {
-    return new IdentityIonHasher();
-};
+class CryptoTestIonHasher implements IonHasher {
+    private hash: Hash;
+    private updates: Uint8Array[] = [];
+    private digests: Uint8Array[] = [];
+
+    constructor(private readonly algorithm: string) {
+        this.hash = createHash(algorithm);
+    }
+    update(bytes: Uint8Array) {
+        this.hash.update(bytes);
+        this.updates.push(bytes);
+    }
+    digest(): Buffer {
+        let digest = this.hash.digest();
+        this.digests.push(digest);
+        this.hash = createHash(this.algorithm);
+        return digest;
+    }
+}
+
+export function testIonHasherProvider(algorithm: string): IonHasherProvider {
+    return (): IonHasher => {
+        if (algorithm == 'identity') {
+            return new IdentityIonHasher();
+        } else {
+            return new CryptoTestIonHasher(algorithm);
+        }
+    };
+}
 
 
 export function sexpStringToBytes(sexpStr: string): number[] {

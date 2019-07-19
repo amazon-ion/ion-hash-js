@@ -7,7 +7,7 @@ import { testIonHasherProvider } from './testutil';
 registerSuite('InvalidDigestCalls', {
     readerTooEarly: () => {
         let str = '{ a: 1, b: 2 }';
-        let hashReader = makeHashReader(ion.makeReader(str), testIonHasherProvider);
+        let hashReader = makeHashReader(ion.makeReader(str), testIonHasherProvider('identity'));
         hashReader.next();
         hashReader.stepIn();
         assert.throws(() => { hashReader.digest() });
@@ -19,13 +19,13 @@ registerSuite('InvalidDigestCalls', {
         reader.next();
         reader.stepIn();
 
-        let hashReader = makeHashReader(reader, testIonHasherProvider);
+        let hashReader = makeHashReader(reader, testIonHasherProvider('identity'));
         hashReader.next();
         assert.throws(() => { hashReader.stepOut() });
     },
 
     writerTooEarly: () => {
-        let hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider);
+        let hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider('identity'));
         hashWriter.writeStruct();
         hashWriter.writeFieldName('a');
         hashWriter.writeInt(5);
@@ -36,7 +36,7 @@ registerSuite('InvalidDigestCalls', {
         let writer = ion.makeBinaryWriter();
         writer.writeStruct();
 
-        let hashWriter = makeHashWriter(writer, testIonHasherProvider);
+        let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
         assert.throws(() => { hashWriter.endContainer() });
     },
 });

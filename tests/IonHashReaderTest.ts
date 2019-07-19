@@ -123,7 +123,7 @@ registerSuite('IonHashReader', {
 let test = (ionStr) => {
     let readerComparer = new ReaderComparer(
         ion.makeReader(ionStr),
-        makeHashReader(ion.makeReader(ionStr), testIonHasherProvider));
+        makeHashReader(ion.makeReader(ionStr), testIonHasherProvider('identity')));
     traverse(readerComparer);
 };
 

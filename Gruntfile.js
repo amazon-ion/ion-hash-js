@@ -27,9 +27,8 @@ module.exports = function(grunt) {
           reporters: ['runner'],
           suites: [
             'dist/commonjs/es5/**/*.js',
-            '!dist/commonjs/es5/**/BigList*.js',
-            '!dist/commonjs/es5/**/IonHash*.js',
-            //'dist/commonjs/es5/**/FieldnameB*.js',
+            '!dist/commonjs/es5/**/BigListOfNaughtyStringsTests.js',
+            '!dist/commonjs/es5/**/IonHashTests.js',
           ],
         },
       },

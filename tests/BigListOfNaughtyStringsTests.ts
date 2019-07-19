@@ -148,7 +148,7 @@ function runTest(testString) {
     try {
         let reader = ion.makeReader(tv.ion);
         let type = reader.next();
-        hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider);
+        hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider('identity'));
         writeTo(reader, type, hashWriter);
     } catch (e) {
         if (tv.validIon) {
@@ -159,7 +159,7 @@ function runTest(testString) {
     let hashReader;
     try {
         let reader = ion.makeReader(tv.ion);
-        hashReader = makeHashReader(reader, testIonHasherProvider);
+        hashReader = makeHashReader(reader, testIonHasherProvider('identity'));
         hashReader.next();
         hashReader.next();
     } catch (e) {

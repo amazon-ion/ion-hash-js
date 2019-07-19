@@ -35,7 +35,7 @@ function test(ionStr: string, expectedSexpBytes: string) {
     let writer = ion.makeTextWriter();
     writer.writeStruct();
 
-    let hashWriter = makeHashWriter(writer, testIonHasherProvider);
+    let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
     hashWriter.writeFieldName("field_name");    // this fieldName should not become part of the hash
 
     let reader = ion.makeReader(ionStr);
@@ -57,7 +57,7 @@ function test(ionStr: string, expectedSexpBytes: string) {
     reader.next();
     reader.stepIn();
 
-    let hashReader = makeHashReader(reader, testIonHasherProvider);
+    let hashReader = makeHashReader(reader, testIonHasherProvider('identity'));
     hashReader.next();
     hashReader.next();
     let readerActualDigest = hashReader.digest();
