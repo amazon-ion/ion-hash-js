@@ -61,7 +61,7 @@ export function writeTo(reader, type, writer, depth = 0) {
             case ion.IonTypes.TIMESTAMP: { writer.writeTimestamp(reader.timestampValue(), reader.annotations()); break }
             case ion.IonTypes.SYMBOL:    { writer.writeSymbol(reader.stringValue(), reader.annotations()); break }
             case ion.IonTypes.STRING:    { writer.writeString(reader.stringValue(), reader.annotations()); break }
-            case ion.IonTypes.CLOB:      { writer.writeClob(reader.value(), reader.annotations()); break }
+            case ion.IonTypes.CLOB:      { writer.writeClob(reader.byteValue(), reader.annotations()); break }
             case ion.IonTypes.BLOB:      { writer.writeBlob(reader.byteValue(), reader.annotations()); break }
             case ion.IonTypes.LIST:      { writer.writeList(reader.annotations()); break }
             case ion.IonTypes.SEXP:      { writer.writeSexp(reader.annotations()); break }

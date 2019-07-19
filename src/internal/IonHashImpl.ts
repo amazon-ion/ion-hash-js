@@ -4,7 +4,6 @@ import { IonType } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonj
 import { IonTypes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonTypes';
 import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonReader';
 import { Timestamp } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonTimestamp';
-import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonWriter';
 import { TypeCodes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonBinary';
 
 import { createHash, Hash } from 'crypto';
