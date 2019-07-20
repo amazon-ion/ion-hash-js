@@ -37,13 +37,14 @@ module.exports = function(grunt) {
     typedoc: {
       build: {
         options: {
-          name: 'ion-hash-js',
-          out: 'docs/api',
-          module: 'commonjs',
-          target: 'es5',
           excludeExternals: true,
           excludePrivate: true,
           hideGenerator: true,
+          mode: 'file',
+          module: 'commonjs',
+          name: 'ion-hash-js',
+          out: 'docs/api',
+          target: 'es5',
         },
         src: 'src/*.ts',
       },

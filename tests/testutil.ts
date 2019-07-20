@@ -10,7 +10,7 @@ class IdentityIonHasher implements IonHasher {
     constructor(private readonly log: string[] = []) {
     }
 
-    update(bytes: Uint8Array) {
+    update(bytes: Uint8Array): void {
         for (let i = 0; i < bytes.length; i++) {
             this.allBytes.push(bytes[i]);
         }
@@ -32,7 +32,7 @@ class CryptoTestIonHasher implements IonHasher {
         this.hash = createHash(algorithm);
     }
 
-    update(bytes: Uint8Array) {
+    update(bytes: Uint8Array): void {
         this.hash.update(bytes);
         this.log.push('update::(' + toHexString(bytes) + ')');
     }

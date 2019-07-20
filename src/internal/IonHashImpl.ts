@@ -15,7 +15,7 @@ export class _CryptoIonHasher implements IonHasher {
     constructor(algorithm: string) {
         this._hash = createHash(algorithm);
     }
-    update(bytes: Uint8Array) { this._hash.update(bytes) }
+    update(bytes: Uint8Array): void { this._hash.update(bytes) }
     digest(): Buffer { return this._hash.digest() }
 }
 
