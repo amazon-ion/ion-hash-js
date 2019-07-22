@@ -34,7 +34,6 @@ class CryptoTestIonHasher implements IonHasher {
 
     update(bytes: Uint8Array): void {
         this.hash.update(bytes);
-        this.log.push('update::(' + toHexString(bytes) + ')');
     }
 
     digest(): Buffer {

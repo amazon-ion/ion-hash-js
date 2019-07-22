@@ -50,7 +50,7 @@ export interface IonHashReader extends IonReader {
      * @return bytes representing the Ion hash of the value just written
      *               or stepped out of
      */
-    digest(): Buffer;
+    digest(): Uint8Array;
 }
 
 /**
@@ -74,7 +74,7 @@ export interface IonHashWriter extends IonWriter {
      * @return bytes representing the Ion hash of the value just written
      *               or stepped out of
      */
-    digest(): Buffer;
+    digest(): Uint8Array;
 }
 
 
@@ -104,7 +104,7 @@ export interface IonHasher {
      *
      * @returns the Ion hash bytes
      */
-    digest(): Buffer;
+    digest(): Uint8Array;
 }
 
 /**

@@ -1,8 +1,8 @@
 const { registerSuite } = intern.getPlugin('interface.object');
 const { assert } = intern.getPlugin('chai');
-import { _byteArrayComparator } from '../src/internal/IonHashImpl';
+import { _Uint8ArrayComparator } from '../src/internal/IonHashImpl';
 
-registerSuite('_byteArrayComparator', {
+registerSuite('_Uint8ArrayComparator', {
     equals: () => { test([0x01, 0x02, 0x03], [0x01, 0x02, 0x03], 0); },
     lessThan: () => { test([0x01, 0x02, 0x03], [0x01, 0x02, 0x04], -1); },
     lessThanDueToLength: () => { test([0x01, 0x02, 0x03], [0x01, 0x02, 0x03, 0x04], -1); },
@@ -18,5 +18,5 @@ registerSuite('_byteArrayComparator', {
     },
 });
 
-let test = function(a, b, expected) { assert.equal(_byteArrayComparator(a, b), expected); };
+let test = function(a, b, expected) { assert.equal(_Uint8ArrayComparator(a, b), expected); };
 

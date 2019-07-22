@@ -48,14 +48,12 @@ for (let type; type = reader.next(); ) {
             theTestName = testName + '.' + algorithm;
         }
 
-        if (algorithm == 'identity') {   // TBD remove to enable MD5 tests
-            suites['ReaderTest'][theTestName] = () => {
-                test(ionStr, algorithm, expects[algorithm], readerDigester);
-            };
-            suites['WriterTest'][theTestName] = () => {
-                test(ionStr, algorithm, expects[algorithm], writerDigester);
-            };
-        }
+        suites['ReaderTest'][theTestName] = () => {
+            test(ionStr, algorithm, expects[algorithm], readerDigester);
+        };
+        suites['WriterTest'][theTestName] = () => {
+            test(ionStr, algorithm, expects[algorithm], writerDigester);
+        };
     }
     testCount++;
     //if (testCount >= 1) break;
@@ -82,6 +80,10 @@ function test(ionStr: string,
         && expectedIonHasherLog[0].startsWith('final_digest::')) {
         assert.deepEqual('final_' + actualIonHasherLog.pop(), expectedIonHasherLog[0]);
     } else {
+        if (algorithm == 'md5') {
+            expectedIonHasherLog = expectedIonHasherLog.filter(
+                    entry => entry.startsWith('digest::'));
+        }
         assert.deepEqual(actualIonHasherLog, expectedIonHasherLog);
     }
 }
@@ -109,7 +111,7 @@ function writerDigester(ionStr: string, algorithm: string, hasherLog: string[]) 
     let type = reader.next();
     let hashWriter = makeHashWriter(
         ion.makeBinaryWriter(),
-        testIonHasherProvider('identity', hasherLog));
+        testIonHasherProvider(algorithm, hasherLog));
     writeTo(reader, type, hashWriter);
     hashWriter.digest();
 }

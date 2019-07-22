@@ -16,7 +16,7 @@ export class _CryptoIonHasher implements IonHasher {
         this._hash = createHash(algorithm);
     }
     update(bytes: Uint8Array): void { this._hash.update(bytes) }
-    digest(): Buffer { return this._hash.digest() }
+    digest(): Uint8Array { return this._hash.digest() }
 }
 
 
@@ -90,7 +90,7 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     }
 
     // implements IonHashReader
-    digest(): Buffer { return this._hasher._digest() }
+    digest(): Uint8Array { return this._hasher._digest() }
 
     // implements _IonValue
     _annotations(): string[] | undefined { return this.annotations() }
@@ -224,7 +224,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     close         ()             { }
 
     // implements IonHashWriter
-    digest(): Buffer { return this._hasher._digest() }
+    digest(): Uint8Array { return this._hasher._digest() }
 
     // implements _IonValue
     _annotations(): string[] | undefined { return this.__annotations }
@@ -278,7 +278,7 @@ class Hasher {
         }
     }
 
-    _digest(): Buffer {
+    _digest(): Uint8Array {
         if (this._depth() != 0) {
             throw new Error("A digest may only be provided at the same depth hashing started")
         }
@@ -440,7 +440,7 @@ class _Serializer {
 
 class _StructSerializer extends _Serializer {
     _scalarSerializer: _Serializer;
-    _fieldHashes: number[][] = [];
+    _fieldHashes: Uint8Array[] = [];
 
     constructor(hashFunction, depth, hashFunctionProvider) {
         super(hashFunction, depth);
@@ -456,20 +456,20 @@ class _StructSerializer extends _Serializer {
     }
 
     _stepOut() {
-        this._fieldHashes.sort(_byteArrayComparator);
+        this._fieldHashes.sort(_Uint8ArrayComparator);
         for (let digest of this._fieldHashes) {
             this._update(_escape(digest));
         }
         super._stepOut();
     }
 
-    _appendFieldHash(digest) {
+    _appendFieldHash(digest: Uint8Array) {
         this._fieldHashes.push(digest);
     }
 }
 
 
-export function _byteArrayComparator(a: number[], b: number[]) {
+export function _Uint8ArrayComparator(a: Uint8Array, b: Uint8Array): number {
     let i = 0;
     while (i < a.length && i < b.length) {
         let a_byte = a[i];
@@ -508,22 +508,23 @@ const _TQ_SYMBOL_SID0 = new Uint8Array([0x71]);
 const _TQ_ANNOTATED_VALUE = new Uint8Array([0xE0]);
 
 
-export function _escape(bytes) {
-    let escapedBytes = bytes;
-    bytes.forEach((b) => {
+export function _escape(bytes: Uint8Array): Uint8Array {
+    for (let i = 0; i < bytes.length; i++) {
+        let b = bytes[i];
         if (b == _BEGIN_MARKER_BYTE || b == _END_MARKER_BYTE || b == _ESCAPE_BYTE) {
             // found a byte that needs to be escaped;  build a new byte array that
             // escapes that byte as well as any others
-            escapedBytes = [];
-            bytes.forEach((c) => {
+            let escapedBytes: number[] = [];
+            for (let j = 0; j < bytes.length; j++) {
+                let c = bytes[j];
                 if (c == _BEGIN_MARKER_BYTE || c == _END_MARKER_BYTE || c == _ESCAPE_BYTE) {
                     escapedBytes.push(_ESCAPE_BYTE);
                 }
                 escapedBytes.push(c);
-            });
-            return escapedBytes;
+            }
+            return new Uint8Array(escapedBytes);
         }
-    });
-    return escapedBytes;
+    }
+    return bytes;
 }
 
