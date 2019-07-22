@@ -6,11 +6,18 @@ import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/e
 import { makeHashReader, makeHashWriter } from '../src/IonHash';
 import { sexpToBytes, testIonHasherProvider, toHexString, toString, writeln, writeTo } from './testutil';
 
-// build the suite based on the contents of ion_hash_tests.ion
+// builds a test suite based on the contents of ion_hash_tests.ion
+
+let digesters = {
+    ReaderTest: readerDigester,
+    ReaderSkipTest: readerSkipDigester,
+    WriterTest: writerDigester,
+};
+
 let suites = { };
-['ReaderTest', 'WriterTest'].forEach(suite => {
-    suites[suite] = { };
-});
+for (const digester in digesters) {
+    suites[digester] = { };
+}
 
 let ionTests = readFileSync('tests/ion_hash_tests.ion', 'utf8');
 let testCount = 0;
@@ -48,15 +55,13 @@ for (let type; type = reader.next(); ) {
             theTestName = testName + '.' + algorithm;
         }
 
-        suites['ReaderTest'][theTestName] = () => {
-            test(ionStr, algorithm, expects[algorithm], readerDigester);
-        };
-        suites['WriterTest'][theTestName] = () => {
-            test(ionStr, algorithm, expects[algorithm], writerDigester);
-        };
+        for (const digester in digesters) {
+            suites[digester][theTestName] = () => {
+                test(ionStr, algorithm, expects[algorithm], digesters[digester]);
+            }
+        }
     }
     testCount++;
-    //if (testCount >= 1) break;
 }
 writeln("testCount: " + testCount);
 
@@ -69,12 +74,12 @@ for (const suite in suites) {
 function test(ionStr: string,
               algorithm: string,
               expect: string,
-              digestFn: (ionStr: string, algorithm: string, hasherLog: string[]) => void) {
+              digester: (ionStr: string, algorithm: string, hasherLog: string[]) => void): void {
 
     let expectedIonHasherLog = getExpectedIonHasherLog(expect);
     let actualIonHasherLog: string[] = [];
 
-    digestFn(ionStr, algorithm, actualIonHasherLog);
+    digester(ionStr, algorithm, actualIonHasherLog);
 
     if (expectedIonHasherLog.length == 1
         && expectedIonHasherLog[0].startsWith('final_digest::')) {
@@ -88,7 +93,7 @@ function test(ionStr: string,
     }
 }
 
-function readerDigester(ionStr: string, algorithm: string, hasherLog: string[]) {
+function readerDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
     function traverse(reader) {
         for (let type; type = reader.next(); ) {
             if (type.container && !reader.isNull()) {
@@ -106,7 +111,16 @@ function readerDigester(ionStr: string, algorithm: string, hasherLog: string[]) 
     hashReader.digest();
 }
 
-function writerDigester(ionStr: string, algorithm: string, hasherLog: string[]) {
+function readerSkipDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
+    let hashReader = makeHashReader(
+        ion.makeReader(ionStr),
+        testIonHasherProvider(algorithm, hasherLog));
+    hashReader.next();
+    hashReader.next();
+    hashReader.digest();
+}
+
+function writerDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
     let reader = ion.makeReader(ionStr);
     let type = reader.next();
     let hashWriter = makeHashWriter(

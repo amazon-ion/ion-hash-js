@@ -17,11 +17,11 @@ class IdentityIonHasher implements IonHasher {
         this.log.push('update::(' + toHexString(bytes) + ')');
     }
 
-    digest(): Buffer {
+    digest(): Uint8Array {
         let digest = this.allBytes;
         this.log.push('digest::(' + toHexString(digest) + ')');
         this.allBytes = [];
-        return Buffer.from(digest);
+        return Uint8Array.from(digest);
     }
 }
 
@@ -36,7 +36,7 @@ class CryptoTestIonHasher implements IonHasher {
         this.hash.update(bytes);
     }
 
-    digest(): Buffer {
+    digest(): Uint8Array {
         let digest = this.hash.digest();
         this.log.push('digest::(' + toHexString(digest) + ')');
         this.hash = createHash(this.algorithm);
