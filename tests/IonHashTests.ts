@@ -33,9 +33,17 @@ for (let type; type = reader.next(); ) {
         testName = reader.annotations()[0];
     }
 
+    let ionData: string | Uint8Array;
     reader.stepIn();
     type = reader.next();   // ion or 10n
-    let ionStr = toString(reader, type);
+    if (reader.fieldName() == '10n') {
+        ionData = sexpToBytes(reader, { asIonBinary: true });
+    } else {
+        ionData = toString(reader, type);
+        if (!testName) {
+            testName = ionData;
+        }
+    }
 
     reader.next();          // expect
 
@@ -49,10 +57,6 @@ for (let type; type = reader.next(); ) {
 
     reader.stepOut();
 
-    if (!testName) {
-        testName = ionStr;
-    }
-
     for (let algorithm in expects) {
         let theTestName = testName;
         if (algorithm != 'identity') {
@@ -61,7 +65,7 @@ for (let type; type = reader.next(); ) {
 
         for (const digester in digesters) {
             suites[digester][theTestName] = () => {
-                test(ionStr, algorithm, expects[algorithm], digesters[digester]);
+                test(ionData, algorithm, expects[algorithm], digesters[digester]);
             }
         }
     }
@@ -75,15 +79,15 @@ for (const suite in suites) {
     registerSuite('IonHashTests.' + suite, suites[suite]);
 }
 
-function test(ionStr: string,
+function test(ionData: string | Uint8Array,
               algorithm: string,
               expect: string,
-              digester: (ionStr: string, algorithm: string, hasherLog: string[]) => void): void {
+              digester: (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]) => void): void {
 
     let expectedIonHasherLog = getExpectedIonHasherLog(expect);
     let actualIonHasherLog: string[] = [];
 
-    digester(ionStr, algorithm, actualIonHasherLog);
+    digester(ionData, algorithm, actualIonHasherLog);
 
     if (expectedIonHasherLog.length == 1
         && expectedIonHasherLog[0].startsWith('final_digest::')) {
@@ -97,8 +101,8 @@ function test(ionStr: string,
     }
 }
 
-function binaryReaderDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
-    let reader = ion.makeReader(ionStr);
+function binaryReaderDigester(ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
+    let reader = ion.makeReader(ionData);
     let writer = ion.makeBinaryWriter();
     let type = reader.next();
     writeTo(reader, type, writer);
@@ -107,8 +111,8 @@ function binaryReaderDigester(ionStr: string, algorithm: string, hasherLog: stri
     readerDigester(ion.makeReader(ionBinary), algorithm, hasherLog);
 }
 
-function textReaderDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
-    readerDigester(ion.makeReader(ionStr), algorithm, hasherLog);
+function textReaderDigester(ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
+    readerDigester(ion.makeReader(ionData), algorithm, hasherLog);
 }
 
 function readerDigester(reader: IonReader, algorithm: string, hasherLog: string[]): void {
@@ -126,25 +130,25 @@ function readerDigester(reader: IonReader, algorithm: string, hasherLog: string[
     hashReader.digest();
 }
 
-function readerSkipDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
+function readerSkipDigester(ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
     let hashReader = makeHashReader(
-        ion.makeReader(ionStr),
+        ion.makeReader(ionData),
         testIonHasherProvider(algorithm, hasherLog));
     hashReader.next();
     hashReader.next();
     hashReader.digest();
 }
 
-function binaryWriterDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
-    writerDigester(ion.makeBinaryWriter(), ionStr, algorithm, hasherLog);
+function binaryWriterDigester(ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
+    writerDigester(ion.makeBinaryWriter(), ionData, algorithm, hasherLog);
 }
 
-function textWriterDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
-    writerDigester(ion.makeTextWriter(), ionStr, algorithm, hasherLog);
+function textWriterDigester(ionData: string, algorithm: string, hasherLog: string[]): void {
+    writerDigester(ion.makeTextWriter(), ionData, algorithm, hasherLog);
 }
 
-function writerDigester(writer: IonWriter, ionStr: string, algorithm: string, hasherLog: string[]): void {
-    let reader = ion.makeReader(ionStr);
+function writerDigester(writer: IonWriter, ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
+    let reader = ion.makeReader(ionData);
     let type = reader.next();
     let hashWriter = makeHashWriter(writer, testIonHasherProvider(algorithm, hasherLog));
     writeTo(reader, type, hashWriter);

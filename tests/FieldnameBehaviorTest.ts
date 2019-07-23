@@ -28,7 +28,7 @@ registerSuite('FieldnameBehavior', {
 });
 
 function test(ionStr: string, expectedSexpBytes: string) {
-    let expectedDigest = Uint8Array.from(sexpStringToBytes(expectedSexpBytes));
+    let expectedDigest = sexpStringToBytes(expectedSexpBytes);
 
     // verify IonHashWriter behavior:
     //let writer = ion.makeBinaryWriter();    // TBD seems broken...

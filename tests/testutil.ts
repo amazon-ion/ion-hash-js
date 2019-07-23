@@ -55,20 +55,25 @@ export function testIonHasherProvider(algorithm: string, log?: string[]): IonHas
 }
 
 
-export function sexpStringToBytes(sexpStr: string): number[] {
+export function sexpStringToBytes(sexpStr: string): Uint8Array {
     let reader = ion.makeReader(sexpStr);
     reader.next();
     return sexpToBytes(reader);
 }
 
-export function sexpToBytes(reader: IonReader): number[] {
-    let bytes: number[] = [];
+export function sexpToBytes(reader: IonReader, options = { asIonBinary: false }): Uint8Array {
+    let bytes: number[];
+    if (options.asIonBinary) {
+        bytes = [0xE0, 0x01, 0x00, 0xEA];
+    } else {
+        bytes = [];
+    }
     reader.stepIn();
     for (let type; type = reader.next(); ) {
         bytes.push(reader.numberValue());
     }
     reader.stepOut();
-    return bytes;
+    return Uint8Array.from(bytes);
 }
 
 
