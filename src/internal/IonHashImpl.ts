@@ -71,10 +71,10 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
             }
         }
 
-        this._ionType = this._reader.next();
         if (this._ionType && this._ionType.scalar) {
             this._hasher._scalar(this);
         }
+        this._ionType = this._reader.next();
         return this._ionType;
     }
 
@@ -85,6 +85,7 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     }
 
     stepOut() {
+        this._traverse();        // fully consume the current container before stepping out
         this._reader.stepOut();
         this._hasher._stepOut();
     }
