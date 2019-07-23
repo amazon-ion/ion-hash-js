@@ -11,11 +11,11 @@ import { sexpToBytes, testIonHasherProvider, toHexString, toString, writeln, wri
 // builds a test suite based on the contents of ion_hash_tests.ion
 
 let digesters = {
-    // BinaryReaderTest: binaryReaderDigester,  // TBD commented out for now
-    BinaryWriterTest: binaryWriterDigester,
-    ReaderSkipTest: readerSkipDigester,
-    TextReaderTest: textReaderDigester,
-    TextWriterTest: textWriterDigester,
+    // BinaryReader: binaryReaderDigester,  // TBD commented out for now
+    BinaryWriter: binaryWriterDigester,
+    ReaderSkip: readerSkipDigester,
+    TextReader: textReaderDigester,
+    TextWriter: textWriterDigester,
 };
 
 let suites = { };
