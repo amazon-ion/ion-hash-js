@@ -3,15 +3,19 @@ const { assert } = intern.getPlugin('chai');
 import { readFileSync } from 'fs';
 
 import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
+import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonReader';
+import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonWriter';
 import { makeHashReader, makeHashWriter } from '../src/IonHash';
 import { sexpToBytes, testIonHasherProvider, toHexString, toString, writeln, writeTo } from './testutil';
 
 // builds a test suite based on the contents of ion_hash_tests.ion
 
 let digesters = {
-    ReaderTest: readerDigester,
+    // BinaryReaderTest: binaryReaderDigester,  // TBD commented out for now
+    BinaryWriterTest: binaryWriterDigester,
     ReaderSkipTest: readerSkipDigester,
-    WriterTest: writerDigester,
+    TextReaderTest: textReaderDigester,
+    TextWriterTest: textWriterDigester,
 };
 
 let suites = { };
@@ -93,7 +97,21 @@ function test(ionStr: string,
     }
 }
 
-function readerDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
+function binaryReaderDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
+    let reader = ion.makeReader(ionStr);
+    let writer = ion.makeBinaryWriter();
+    let type = reader.next();
+    writeTo(reader, type, writer);
+    writer.close();
+    let ionBinary = writer.getBytes();
+    readerDigester(ion.makeReader(ionBinary), algorithm, hasherLog);
+}
+
+function textReaderDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
+    readerDigester(ion.makeReader(ionStr), algorithm, hasherLog);
+}
+
+function readerDigester(reader: IonReader, algorithm: string, hasherLog: string[]): void {
     function traverse(reader) {
         for (let type; type = reader.next(); ) {
             if (type.container && !reader.isNull()) {
@@ -103,10 +121,7 @@ function readerDigester(ionStr: string, algorithm: string, hasherLog: string[]):
             }
         }
     }
-
-    let hashReader = makeHashReader(
-        ion.makeReader(ionStr),
-        testIonHasherProvider(algorithm, hasherLog));
+    let hashReader = makeHashReader(reader, testIonHasherProvider(algorithm, hasherLog));
     traverse(hashReader);
     hashReader.digest();
 }
@@ -120,12 +135,18 @@ function readerSkipDigester(ionStr: string, algorithm: string, hasherLog: string
     hashReader.digest();
 }
 
-function writerDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
+function binaryWriterDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
+    writerDigester(ion.makeBinaryWriter(), ionStr, algorithm, hasherLog);
+}
+
+function textWriterDigester(ionStr: string, algorithm: string, hasherLog: string[]): void {
+    writerDigester(ion.makeTextWriter(), ionStr, algorithm, hasherLog);
+}
+
+function writerDigester(writer: IonWriter, ionStr: string, algorithm: string, hasherLog: string[]): void {
     let reader = ion.makeReader(ionStr);
     let type = reader.next();
-    let hashWriter = makeHashWriter(
-        ion.makeBinaryWriter(),
-        testIonHasherProvider(algorithm, hasherLog));
+    let hashWriter = makeHashWriter(writer, testIonHasherProvider(algorithm, hasherLog));
     writeTo(reader, type, hashWriter);
     hashWriter.digest();
 }

@@ -122,11 +122,6 @@ export function toHexString(byteArray) {
     return sb;
 }
 
-export function write(s) {
-    process.stdout.write(s);
-};
-
-export function writeln(s = "") {
-    write(s + "\n");
-};
+export function write(s) { process.stdout.write(s) }
+export function writeln(s = "") { write(s + "\n") }
 
