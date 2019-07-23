@@ -3,6 +3,7 @@ import { Decimal } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonj
 import { IonType } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonType';
 import { IonTypes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonTypes';
 import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonReader';
+import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonWriter';
 import { Timestamp } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonTimestamp';
 import { TypeCodes } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonBinary';
 
@@ -32,7 +33,8 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     private readonly _hasher: Hasher;
     private _ionType: IonType | null = null;
 
-    constructor(private readonly _reader: IonReader, private readonly _hashFunctionProvider) {
+    constructor(private readonly _reader: IonReader,
+                private readonly _hashFunctionProvider: IonHasherProvider) {
         this._hasher = new Hasher(this._hashFunctionProvider);
     }
 
@@ -110,7 +112,8 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     private __isNull: boolean = false;
     private __value: any;
 
-    constructor(private readonly _writer, private readonly _hashFunctionProvider) {
+    constructor(private readonly _writer: IonWriter,
+                private readonly _hashFunctionProvider: IonHasherProvider) {
         this._hasher = new Hasher(this._hashFunctionProvider);
     }
 
@@ -170,6 +173,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
             case TypeCodes.LIST:         { ionType = IonTypes.LIST; break }
             case TypeCodes.SEXP:         { ionType = IonTypes.SEXP; break }
             case TypeCodes.STRUCT:       { ionType = IonTypes.STRUCT; break }
+            default: throw new Error('Unexpected type ' + type);
         }
         this._hashScalar(ionType, null, annotations);
         this._writer.writeNull(type, annotations);
@@ -292,17 +296,17 @@ class Hasher {
 }
 
 class _Serializer {
-    private static readonly _serializers = {
-        "null":      (value, writer) => { writer.writeNull() },
-        "bool":      (value, writer) => { writer.writeBoolean(value) },
-        "int":       (value, writer) => { writer.writeInt(value) },
-        "float":     (value, writer) => { writer.writeFloat64(value) },
-        "decimal":   (value, writer) => { writer.writeDecimal(value) },
-        "timestamp": (value, writer) => { writer.writeTimestamp(value) },
-        "symbol":    (value, writer) => { writer.writeString(value) },
-        "string":    (value, writer) => { writer.writeString(value) },
-        "clob":      (value, writer) => { writer.writeClob(value) },
-        "blob":      (value, writer) => { writer.writeBlob(value) },
+    private static readonly _serializers: { [typeName: string]: (value: any, writer: IonWriter) => void } = {
+        "null":      (value: any, writer: IonWriter) => { writer.writeNull(TypeCodes.NULL) },
+        "bool":      (value: any, writer: IonWriter) => { writer.writeBoolean(value) },
+        "int":       (value: any, writer: IonWriter) => { writer.writeInt(value) },
+        "float":     (value: any, writer: IonWriter) => { writer.writeFloat64(value) },
+        "decimal":   (value: any, writer: IonWriter) => { writer.writeDecimal(value) },
+        "timestamp": (value: any, writer: IonWriter) => { writer.writeTimestamp(value) },
+        "symbol":    (value: any, writer: IonWriter) => { writer.writeString(value) },
+        "string":    (value: any, writer: IonWriter) => { writer.writeString(value) },
+        "clob":      (value: any, writer: IonWriter) => { writer.writeClob(value) },
+        "blob":      (value: any, writer: IonWriter) => { writer.writeBlob(value) },
     };
 
     private _hasContainerAnnotations = false;
@@ -310,13 +314,14 @@ class _Serializer {
     constructor(public _hashFunction: IonHasher, private readonly _depth: number) {
     }
 
-    _handleFieldName(fieldName) {
+    _handleFieldName(fieldName: string | null | undefined) {
+        // TBD remove "!= undefined"
         if (fieldName != undefined && this._depth > 0) {
             this._writeSymbol(fieldName);
         }
     }
 
-    private _handleAnnotationsBegin(ionValue, isContainer=false) {
+    private _handleAnnotationsBegin(ionValue: _IonValue, isContainer=false): void {
         let annotations = ionValue._annotations();
         if (annotations && annotations.length > 0) {
             this._beginMarker();
@@ -330,8 +335,8 @@ class _Serializer {
         }
     }
 
-    private _handleAnnotationsEnd(ionValue, isContainer=false) {
-        if ((ionValue && ionValue._annotations() && ionValue._annotations().length > 0)
+    private _handleAnnotationsEnd(ionValue: _IonValue | null, isContainer=false): void {
+        if ((ionValue && ionValue._annotations() && ionValue._annotations()!.length > 0)
             || (isContainer && this._hasContainerAnnotations)) {
             this._endMarker();
             if (isContainer) {
@@ -340,12 +345,12 @@ class _Serializer {
         }
     }
 
-    protected _update(bytes: Uint8Array) { this._hashFunction.update(bytes) }
-    protected _beginMarker() { this._hashFunction.update(_BEGIN_MARKER) }
-    protected _endMarker()   { this._hashFunction.update(_END_MARKER) }
+    protected _update(bytes: Uint8Array): void { this._hashFunction.update(bytes) }
+    protected _beginMarker(): void { this._hashFunction.update(_BEGIN_MARKER) }
+    protected _endMarker(): void   { this._hashFunction.update(_END_MARKER) }
 
     // TBD merge with scalar()?
-    private _writeSymbol(token) {
+    private _writeSymbol(token: string): void {
         this._beginMarker();
         let scalarBytes = this._getBytes(IonTypes.SYMBOL, token, false);
         let [tq, representation] = this._scalarOrNullSplitParts(IonTypes.SYMBOL, false, scalarBytes);
@@ -357,9 +362,9 @@ class _Serializer {
         this._endMarker();
     }
 
-    private _getBytes(type, value, isNull) {
+    private _getBytes(type: IonType, value: any, isNull: boolean): Uint8Array {
         if (isNull) {
-            return [type.bid << 4 | 0x0F];
+            return Uint8Array.from([type.bid << 4 | 0x0F]);
         } else {
             let writer = ion.makeBinaryWriter();
             _Serializer._serializers[type.name](value, writer);
@@ -368,7 +373,7 @@ class _Serializer {
         }
     }
 
-    private _getLengthLength(bytes): number {
+    private _getLengthLength(bytes: Uint8Array): number {
         if ((bytes[0] & 0x0F) == 0x0E) {
             // read subsequent byte(s) as the "length" field
             for (let i = 1; i < bytes.length; i++) {
@@ -381,7 +386,7 @@ class _Serializer {
         return 0;
     }
 
-    private _scalarOrNullSplitParts(type, isNull, bytes) {
+    private _scalarOrNullSplitParts(type: IonType, isNull: boolean, bytes: Uint8Array): [number, Uint8Array] {
         let offset = 1 + this._getLengthLength(bytes);
 
         // the representation is everything after TL (first byte) and length
@@ -410,8 +415,8 @@ class _Serializer {
     _scalar(ionValue: _IonValue) {
         this._handleAnnotationsBegin(ionValue);
         this._beginMarker();
-        let scalarBytes = this._getBytes(ionValue._type(), ionValue._value(), ionValue._isNull());
-        let [tq, representation] = this._scalarOrNullSplitParts(ionValue._type(), ionValue._isNull(), scalarBytes);
+        let scalarBytes = this._getBytes(ionValue._type()!, ionValue._value(), ionValue._isNull());
+        let [tq, representation] = this._scalarOrNullSplitParts(ionValue._type()!, ionValue._isNull(), scalarBytes);
         this._update(new Uint8Array([tq]));
         if (representation.length > 0) {
             this._update(_escape(representation));
@@ -443,13 +448,15 @@ class _StructSerializer extends _Serializer {
     _scalarSerializer: _Serializer;
     _fieldHashes: Uint8Array[] = [];
 
-    constructor(hashFunction, depth, hashFunctionProvider) {
+    constructor(hashFunction: IonHasher,
+                depth: number,
+                hashFunctionProvider: IonHasherProvider) {
         super(hashFunction, depth);
         this._scalarSerializer = new _Serializer(hashFunctionProvider(), depth + 1);
         this._fieldHashes = [];
     }
 
-    _scalar(value) {
+    _scalar(value: _IonValue) {
         this._scalarSerializer._handleFieldName(value._fieldName());
         this._scalarSerializer._scalar(value);
         let digest = this._scalarSerializer._digest();
@@ -505,7 +512,7 @@ const _TQ = {};
 for (let ionType in IonTypes) {
     _TQ[ionType] = IonTypes[ionType].bid << 4;
 }
-const _TQ_SYMBOL_SID0 = new Uint8Array([0x71]);
+// TBD const _TQ_SYMBOL_SID0 = new Uint8Array([0x71]);
 const _TQ_ANNOTATED_VALUE = new Uint8Array([0xE0]);
 
 
