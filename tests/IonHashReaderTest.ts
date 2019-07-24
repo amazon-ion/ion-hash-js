@@ -5,7 +5,7 @@ import * as ion from 'ion-js';
 import { Decimal, IonType, IonTypes, Reader as IonReader, Timestamp } from 'ion-js';
 
 import { IonHashReader, makeHashReader } from '../src/IonHash';
-import { sexpToBytes, testIonHasherProvider } from './testutil';
+import {sexpToBytes, testIonHasherProvider, toHexString, writeln} from './testutil';
 
 class ReaderComparer implements IonReader {
     constructor(private readerA: IonReader, private readerB: IonReader) { }
@@ -141,6 +141,44 @@ registerSuite('IonHashReader', {
 
         assert.isUndefined(hashReader.next());
         assert.deepEqual(hashReader.digest(), new Uint8Array());
+    },
+
+    initialValue: () => {
+        let md5initialDigest = Uint8Array.from(
+            [0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04, 0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e]);
+
+        let hashReader = makeHashReader(ion.makeReader('null'), testIonHasherProvider('md5'));
+
+        assert.deepEqual(hashReader.digest(), md5initialDigest);
+
+        assert.equal(hashReader.next(), IonTypes.NULL);
+        assert.deepEqual(hashReader.digest(), md5initialDigest);
+
+        assert.isUndefined(hashReader.next());
+        assert.deepEqual(hashReader.digest(), Uint8Array.from(
+            [0x0f, 0x50, 0xc5, 0xe5, 0xe8, 0x77, 0xb4, 0x45, 0x1a, 0xa9, 0xfe, 0x77, 0xc3, 0x76, 0xcd, 0xe4]));
+
+        assert.isUndefined(hashReader.next());
+        assert.deepEqual(hashReader.digest(), md5initialDigest);
+    },
+
+    digestTooEarly: () => {
+        let str = '{ a: 1, b: 2 }';
+        let hashReader = makeHashReader(ion.makeReader(str), testIonHasherProvider('identity'));
+        hashReader.next();
+        hashReader.stepIn();
+        assert.throws(() => { hashReader.digest() });
+    },
+
+    digestTooLate: () => {
+        let str = '{ a: 1, b: 2 }';
+        let reader = ion.makeReader(str);
+        reader.next();
+        reader.stepIn();
+
+        let hashReader = makeHashReader(reader, testIonHasherProvider('identity'));
+        hashReader.next();
+        assert.throws(() => { hashReader.stepOut() });
     },
 
     consumeRemainder_partialConsume: () => {
