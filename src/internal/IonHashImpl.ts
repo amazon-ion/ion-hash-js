@@ -232,7 +232,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     // implements _IonValue
     _annotations(): string[] | undefined { return this.__annotations }
     _fieldName(): string | null          { return this.__fieldName }
-    _isNull(): boolean                   { return this.__isNull }   // TBD can a caller invoke writeString(null) ?
+    _isNull(): boolean                   { return this.__isNull }
     _type(): IonType | null              { return this.__ionType }
     _value(): any                        { return this.__value }
 }
