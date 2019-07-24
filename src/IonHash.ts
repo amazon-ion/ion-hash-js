@@ -27,52 +27,35 @@ export function makeHashWriter(writer: IonWriter,
 
 
 /**
- * TBD is this accurate?
- *
- * Provides the Ion hash of the value just nexted past or stepped out of;
- * hashes of partial Ion values are not provided.  If there is no current
- * hash value, returns an empty array.
- *
- * Implementations must calculate the hash independently of how the Ion
- * is traversed (e.g., the hash of a container must be identical whether
- * the caller skips over it, steps into it, or any combination thereof).
+ * IonReader decorator that computes the Ion hash of values read.
  *
  * @see Reader
  */
 export interface IonHashReader extends IonReader {
     /**
-     * TBD
+     * Provides the Ion hash of the value just nexted past.
      *
-     * Provides the Ion hash of the value just nexted written or stepped out of;
-     * hashes of partial Ion values are not provided.  If there is no current
-     * hash value, returns an empty array.
+     * Implementations must calculate the hash independently of how the Ion
+     * is traversed (e.g., the hash of a container must be identical whether
+     * the caller skips over it, steps into it, or any combination thereof).
      *
-     * @return bytes representing the Ion hash of the value just written
-     *               or stepped out of
+     * @return bytes representing the Ion hash of the value just nexted past
+     * @throws if invoked at a different depth than when the IonHashReader was instantiated
      */
     digest(): Uint8Array;
 }
 
 /**
- * TBD is this accurate?
- *
- * IonWriter extension that provides the hash of the IonValue just written
- * or stepped out of, as defined by the Amazon Ion Hash Specification.
- *
- * Implementations of this interface are not thread-safe.
+ * IonWriter decorator that computes the Ion hash of written values.
  *
  * @see Writer
  */
 export interface IonHashWriter extends IonWriter {
     /**
-     * TBD
-     *
-     * Provides the Ion hash of the value just written or stepped out of;
-     * hashes of partial Ion values are not provided.  If there is no current
-     * hash value, returns an empty array.
+     * Provides the Ion hash of the value just written.
      *
      * @return bytes representing the Ion hash of the value just written
-     *               or stepped out of
+     * @throws if invoked at a different depth than when the IonHashWriter was instantiated
      */
     digest(): Uint8Array;
 }
@@ -81,6 +64,8 @@ export interface IonHashWriter extends IonWriter {
 /**
  * Implementations of this function type interface create an IonHasher
  * instance when invoked.
+ *
+ * @sse [[cryptoIonHasherProvider]]
  */
 export interface IonHasherProvider {
     (): IonHasher;
@@ -113,6 +98,7 @@ export interface IonHasher {
  *
  * @param algorithm specifies the algorithm use when invoking `crypto.createHash()`
  *                  (e.g., 'sha1', 'md5', 'sha256', 'sha512')
+ * @throws if the specified algorithm isn't supported
  */
 export function cryptoIonHasherProvider(algorithm: string): IonHasherProvider {
     return (): IonHasher => { return new _CryptoIonHasher(algorithm) };

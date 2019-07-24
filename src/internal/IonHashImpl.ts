@@ -397,8 +397,8 @@ class _Serializer {
         }
 
         if (type.name != 'bool'              // TBD fix
-            && type.name != 'symbol'     // TBD fix
-            && (tq & 0x0F) != 0x0F) {    // not a null value
+                && type.name != 'symbol'     // TBD fix
+                && (tq & 0x0F) != 0x0F) {    // not a null value
             tq &= 0xF0;                      // zero - out the L nibble
         }
 
