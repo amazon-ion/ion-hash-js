@@ -5,10 +5,8 @@
   "main": "dist/commonjs/es5/IonHash.js",
   "types": "dist/commonjs/es5/IonHash.d.ts",
   "scripts": {
-    "commit": "git-cz",
     "test": "grunt test",
-    "release": "grunt release",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "release": "grunt release"
   },
   "repository": {
     "type": "git",
@@ -24,13 +22,7 @@
     "url": "https://github.com/amzn/ion-hash-js/issues"
   },
   "homepage": "https://github.com/amzn/ion-hash-js#readme",
-  "__comment_config": {
-    "commitizen": {
-      "path": "node_modules/cz-conventional-changelog"
-    }
-  },
   "devDependencies": {
-    "crypto": "^1.0.1",
     "grunt": "^1.0.1",
     "grunt-contrib-clean": "^1.0.0",
     "grunt-ts": "^6.0.0-beta.19",
@@ -40,6 +32,8 @@
     "typescript": "^3.5.3"
   },
   "dependencies": {
+    "crypto": "^1.0.1",
     "ion-js": "^3.0.0-beta.3"
   }
 }
+
