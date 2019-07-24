@@ -12,7 +12,6 @@ An implementation of [Amazon Ion Hash](https://amzn.github.io/ion-hash/docs/spec
 [![npm version](https://img.shields.io/npm/v/ion-hash-js.svg)](https://www.npmjs.com/package/ion-hash-js)
 [![license](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/amzn/ion-hash-js/blob/master/LICENSE)
 [[!docs](https://img.shields.io/badge/docs-api-green.svg?style=flat-square)](https://amzn.github.io/ion-hash-js/api)
-[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)](https://github.com/amzn/ion-js/releases)
 
 # Getting Started
 
