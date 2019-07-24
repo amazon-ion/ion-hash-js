@@ -24,12 +24,12 @@ interface _IonValue {
 }
 
 export class _HashReaderImpl implements IonHashReader, _IonValue {
-    private readonly _hasher: Hasher;
+    private readonly _hasher: _Hasher;
     private _ionType: IonType | null = null;
 
     constructor(private readonly _reader: IonReader,
                 private readonly _hashFunctionProvider: IonHasherProvider) {
-        this._hasher = new Hasher(this._hashFunctionProvider);
+        this._hasher = new _Hasher(this._hashFunctionProvider);
     }
 
     // implements IonReader
@@ -98,7 +98,7 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
 }
 
 export class _HashWriterImpl implements IonHashWriter, _IonValue {
-    private readonly _hasher: Hasher;
+    private readonly _hasher: _Hasher;
 
     private __ionType: IonType | null = null;
     private __annotations: string[] | undefined;
@@ -108,7 +108,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
 
     constructor(private readonly _writer: IonWriter,
                 private readonly _hashFunctionProvider: IonHasherProvider) {
-        this._hasher = new Hasher(this._hashFunctionProvider);
+        this._hasher = new _Hasher(this._hashFunctionProvider);
     }
 
     ///// scalars
@@ -233,7 +233,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     _value(): any                        { return this.__value }
 }
 
-class Hasher {
+class _Hasher {
     private _currentHasher: _Serializer;
     private readonly _hasherStack: _Serializer[] = [];
 
@@ -264,7 +264,7 @@ class Hasher {
 
     _stepOut() {
         if (this._depth() == 0) {
-            throw new Error("Hasher cannot stepOut any further");
+            throw new Error("_Hasher cannot stepOut any further");
         }
 
         this._currentHasher._stepOut();
@@ -392,7 +392,6 @@ class _Serializer {
             if (isNull) {
                 tq |= 0x0F;
             }
-            // TBD if SID0 ...
         }
 
         if (type != IonTypes.BOOL
@@ -505,7 +504,6 @@ const _TQ: { [ionType: string]: number } = {};
 for (let ionType in IonTypes) {
     _TQ[ionType.toLowerCase()] = (IonTypes as any)[ionType].bid << 4;
 }
-// TBD const _TQ_SYMBOL_SID0 = new Uint8Array([0x71]);
 const _TQ_ANNOTATED_VALUE = new Uint8Array([0xE0]);
 
 
