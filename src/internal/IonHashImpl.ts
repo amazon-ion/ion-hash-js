@@ -188,12 +188,16 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     ///// containers
 
     private _hashContainer(type: IonType, annotations?: string[], isNull?: boolean) {
-        this.__ionType = type;
-        this.__value = null;
-        this.__annotations = annotations;
-        this.__isNull = false;
-        this._hasher._stepIn(this);
-        this.__fieldName = null;
+        if (isNull) {
+            this._hashScalar(type, null, annotations);
+        } else {
+            this.__ionType = type;
+            this.__value = null;
+            this.__annotations = annotations;
+            this.__isNull = false;
+            this._hasher._stepIn(this);
+            this.__fieldName = null;
+        }
     }
 
     writeList(annotations?: string[], isNull?: boolean) {

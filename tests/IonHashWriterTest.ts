@@ -41,6 +41,32 @@ registerSuite('IonHashWriter', {
         assert.deepEqual(hashWriter.digest(), md5initialDigest);
     },
 
+    writeScalarNull: () => {
+        let writer = ion.makeTextWriter();
+        let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
+
+        hashWriter.writeNull(TypeCodes.STRING);
+        let writeNullDigest = hashWriter.digest();
+
+        hashWriter.writeString((null as unknown) as string);
+        let writeStringDigest = hashWriter.digest();
+
+        assert.deepEqual(writeStringDigest, writeNullDigest);
+    },
+
+    writeContainerNull: () => {
+        let writer = ion.makeTextWriter();
+        let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
+
+        hashWriter.writeNull(TypeCodes.LIST);
+        let writeNullDigest = hashWriter.digest();
+
+        hashWriter.writeList(undefined, true);
+        let writeListDigest = hashWriter.digest();
+
+        assert.deepEqual(writeListDigest, writeNullDigest);
+    },
+
     digestTooEarly: () => {
         let hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider('identity'));
         hashWriter.writeStruct();
