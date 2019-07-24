@@ -252,7 +252,7 @@ class Hasher {
             hf = this._ihp();
         }
 
-        if (ionValue._type()!.name == 'struct') {   // TBD
+        if (ionValue._type() == IonTypes.STRUCT) {
             this._currentHasher = new _StructSerializer(hf, this._depth(), this._ihp);
         } else {
             this._currentHasher = new _Serializer(hf, this._depth());
@@ -309,7 +309,7 @@ class _Serializer {
     }
 
     _handleFieldName(fieldName: string | null | undefined) {
-        // TBD remove "!= undefined"
+        // the "!= undefined" condition allows the empty symbol to be written
         if (fieldName != undefined && this._depth > 0) {
             this._writeSymbol(fieldName);
         }
@@ -331,7 +331,7 @@ class _Serializer {
 
     private _handleAnnotationsEnd(ionValue: _IonValue | null, isContainer=false): void {
         if ((ionValue && ionValue._annotations() && ionValue._annotations()!.length > 0)
-            || (isContainer && this._hasContainerAnnotations)) {
+                || (isContainer && this._hasContainerAnnotations)) {
             this._endMarker();
             if (isContainer) {
                 this._hasContainerAnnotations = false;
@@ -343,7 +343,6 @@ class _Serializer {
     protected _beginMarker(): void { this._hashFunction.update(_BEGIN_MARKER) }
     protected _endMarker(): void   { this._hashFunction.update(_END_MARKER) }
 
-    // TBD merge with scalar()?
     private _writeSymbol(token: string): void {
         this._beginMarker();
         let scalarBytes = this._getBytes(IonTypes.SYMBOL, token, false);
@@ -387,7 +386,7 @@ class _Serializer {
         let representation = bytes.slice(offset);
         let tq = bytes[0];
 
-        if (type.name == 'symbol') { // TBD fix
+        if (type == IonTypes.SYMBOL) {
             // symbols are serialized as strings;  use the correct TQ:
             tq = 0x70;
             if (isNull) {
@@ -396,8 +395,8 @@ class _Serializer {
             // TBD if SID0 ...
         }
 
-        if (type.name != 'bool'              // TBD fix
-                && type.name != 'symbol'     // TBD fix
+        if (type != IonTypes.BOOL
+                && type != IonTypes.SYMBOL
                 && (tq & 0x0F) != 0x0F) {    // not a null value
             tq &= 0xF0;                      // zero - out the L nibble
         }
@@ -423,7 +422,7 @@ class _Serializer {
         this._handleFieldName(ionValue._fieldName());
         this._handleAnnotationsBegin(ionValue, true);
         this._beginMarker();
-        let tq = _TQ[ionValue._type()!.name.toUpperCase()];   // TBD  rationalize this
+        let tq = _TQ[ionValue._type()!.name];
         if (ionValue._isNull()) {
             tq |= 0x0F;
         }
@@ -504,7 +503,7 @@ const _END_MARKER = new Uint8Array([_END_MARKER_BYTE]);
 
 const _TQ: { [ionType: string]: number } = {};
 for (let ionType in IonTypes) {
-    _TQ[ionType] = (IonTypes as any)[ionType].bid << 4;
+    _TQ[ionType.toLowerCase()] = (IonTypes as any)[ionType].bid << 4;
 }
 // TBD const _TQ_SYMBOL_SID0 = new Uint8Array([0x71]);
 const _TQ_ANNOTATED_VALUE = new Uint8Array([0xE0]);
