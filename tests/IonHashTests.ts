@@ -2,9 +2,8 @@ const { registerSuite } = intern.getPlugin('interface.object');
 const { assert } = intern.getPlugin('chai');
 import { readFileSync } from 'fs';
 
-import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
-import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonReader';
-import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonWriter';
+import * as ion from 'ion-js';
+import { Reader as IonReader, Writer as IonWriter } from 'ion-js';
 import { makeHashReader, makeHashWriter } from '../src/IonHash';
 import { sexpToBytes, testIonHasherProvider, toHexString, toString, writeln, writeTo } from './testutil';
 

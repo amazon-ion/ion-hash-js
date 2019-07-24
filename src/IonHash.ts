@@ -1,5 +1,5 @@
-import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonReader';
-import { Writer as IonWriter } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonWriter';
+import { Reader as IonReader } from 'ion-js';
+import { Writer as IonWriter } from 'ion-js';
 
 import { _HashReaderImpl, _HashWriterImpl, _CryptoIonHasher } from './internal/IonHashImpl';
 

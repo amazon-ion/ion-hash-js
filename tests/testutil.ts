@@ -1,5 +1,5 @@
-import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
-import { Reader as IonReader } from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/IonReader';
+import * as ion from 'ion-js';
+import { Reader as IonReader } from 'ion-js';
 import {IonHasher, IonHasherProvider} from "../src/IonHash";
 
 import { createHash, Hash } from 'crypto';

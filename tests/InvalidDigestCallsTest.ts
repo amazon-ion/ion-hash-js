@@ -1,6 +1,6 @@
 const { registerSuite } = intern.getPlugin('interface.object');
 const { assert } = intern.getPlugin('chai');
-import * as ion from '/Users/pcornell/dev/ion/ion-js.development/dist/commonjs/es6/Ion';
+import * as ion from 'ion-js';
 import { makeHashReader, makeHashWriter } from '../src/IonHash';
 import { testIonHasherProvider } from './testutil';
 
