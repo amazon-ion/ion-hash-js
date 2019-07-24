@@ -502,9 +502,9 @@ const _ESCAPE_BYTE = 0x0C;
 const _BEGIN_MARKER = new Uint8Array([_BEGIN_MARKER_BYTE]);
 const _END_MARKER = new Uint8Array([_END_MARKER_BYTE]);
 
-const _TQ = {};
+const _TQ: { [ionType: string]: number } = {};
 for (let ionType in IonTypes) {
-    _TQ[ionType] = IonTypes[ionType].bid << 4;
+    _TQ[ionType] = (IonTypes as any)[ionType].bid << 4;
 }
 // TBD const _TQ_SYMBOL_SID0 = new Uint8Array([0x71]);
 const _TQ_ANNOTATED_VALUE = new Uint8Array([0xE0]);

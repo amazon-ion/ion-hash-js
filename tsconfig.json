@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "noImplicitAny": true,
     "rootDirs": ["src", "tests"],
     "sourceMap": true,
     "strictNullChecks": true,

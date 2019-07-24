@@ -3,7 +3,8 @@ const { assert } = intern.getPlugin('chai');
 import { readFileSync } from 'fs';
 
 import * as ion from 'ion-js';
-import { makeHashReader, makeHashWriter } from '../src/IonHash';
+
+import { IonHashReader, IonHashWriter, makeHashReader, makeHashWriter } from '../src/IonHash';
 import { testIonHasherProvider, toHexString, writeln, writeTo } from './testutil';
 
 class TestValue {
@@ -126,15 +127,13 @@ readFileSync('tests/big-list-of-naughty-strings.txt', 'utf-8')
         strings.push(tv.symbol() + "::" + tv.symbol() + "::" + tv.symbol() + "::" + tv.string());
     });
 
-let suite = { };
+let suite: { [testName: string]: () => void } = { };
 let testCount = 0;
 strings.forEach(str => {
-    //if (str == "'undefined'::{'undefined':'undefined'}") {
-        suite[str] = () => {
-            runTest(str);
-        };
-        testCount++;
-    //}
+    suite[str] = () => {
+        runTest(str);
+    };
+    testCount++;
 });
 writeln("testCount: " + testCount);
 
@@ -142,9 +141,9 @@ writeln("testCount: " + testCount);
 registerSuite('BigListOfNaughtyStringsTests', suite);
 
 
-function runTest(testString) {
+function runTest(testString: string) {
     let tv = new TestValue(testString);
-    let hashWriter;
+    let hashWriter: IonHashWriter | null = null;
     try {
         let reader = ion.makeReader(tv.ion);
         let type = reader.next();
@@ -156,7 +155,7 @@ function runTest(testString) {
         }
     }
 
-    let hashReader;
+    let hashReader: IonHashReader | null = null;
     try {
         let reader = ion.makeReader(tv.ion);
         hashReader = makeHashReader(reader, testIonHasherProvider('identity'));
@@ -170,8 +169,8 @@ function runTest(testString) {
     }
 
     if (tv.validIon == null || tv.validIon) {
-        assert.equal(toHexString(hashWriter.digest()),
-            toHexString(hashReader.digest()));
+        assert.equal(toHexString(hashWriter!.digest()),
+            toHexString(hashReader!.digest()));
     }
 }
 

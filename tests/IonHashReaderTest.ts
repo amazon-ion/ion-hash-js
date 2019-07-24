@@ -74,7 +74,7 @@ class ReaderComparer implements IonReader {
 }
 
 // asks the comparator to verify identical behavior for all the reader methods
-function traverse(reader) {
+function traverse(reader: IonReader) {
     for (let type; type = reader.next(); ) {
         switch (type) {
             case ion.IonTypes.BOOL:      { reader.booleanValue(); break }
@@ -194,7 +194,7 @@ registerSuite('IonHashReader', {
     },
 });
 
-let test = (ionStr) => {
+let test = (ionStr: string) => {
     let readerComparer = new ReaderComparer(
         ion.makeReader(ionStr),
         makeHashReader(ion.makeReader(ionStr), testIonHasherProvider('identity')));

@@ -13,7 +13,7 @@ registerSuite('_escape', {
     escape_multiple: () => { test([0x0c, 0x10, 0x0c, 0x11, 0x0c, 0x12, 0x0c], [0x0c, 0x0c, 0x10, 0x0c, 0x0c, 0x11, 0x0c, 0x0c, 0x12, 0x0c, 0x0c]); },
 });
 
-let test = (actual, expected) => {
+let test = (actual: number[], expected: number[]) => {
     assert.deepEqual(_escape(new Uint8Array(actual)), new Uint8Array(expected));
 };
 

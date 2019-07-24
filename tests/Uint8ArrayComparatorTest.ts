@@ -18,5 +18,7 @@ registerSuite('_Uint8ArrayComparator', {
     },
 });
 
-let test = function(a, b, expected) { assert.equal(_Uint8ArrayComparator(a, b), expected); };
+let test = function(a: number[], b: number[], expected: number) {
+    assert.equal(_Uint8ArrayComparator(new Uint8Array(a), new Uint8Array(b)), expected);
+};
 

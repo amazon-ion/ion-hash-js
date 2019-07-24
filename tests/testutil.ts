@@ -1,6 +1,6 @@
 import * as ion from 'ion-js';
-import { Reader as IonReader } from 'ion-js';
-import {IonHasher, IonHasherProvider} from "../src/IonHash";
+import { IonType, Reader as IonReader, Writer as IonWriter } from 'ion-js';
+import { IonHasher, IonHasherProvider } from "../src/IonHash";
 
 import { createHash, Hash } from 'crypto';
 
@@ -18,7 +18,7 @@ class IdentityIonHasher implements IonHasher {
     }
 
     digest(): Uint8Array {
-        let digest = this.allBytes;
+        let digest = new Uint8Array(this.allBytes);
         this.log.push('digest::(' + toHexString(digest) + ')');
         this.allBytes = [];
         return Uint8Array.from(digest);
@@ -77,13 +77,13 @@ export function sexpToBytes(reader: IonReader, options = { asIonBinary: false })
 }
 
 
-export function toString(reader, type): string {
+export function toString(reader: IonReader, type: IonType): string {
     let writer = ion.makeTextWriter();
     writeTo(reader, type, writer);
     return String.fromCharCode.apply(null, writer.getBytes());
 }
 
-export function writeTo(reader, type, writer, depth = 0) {
+export function writeTo(reader: IonReader, type: IonType, writer: IonWriter, depth = 0): void {
     if (depth > 0) {
         if (reader.fieldName() != undefined) {
             writer.writeFieldName(reader.fieldName());
@@ -118,7 +118,7 @@ export function writeTo(reader, type, writer, depth = 0) {
     }
 }
 
-export function toHexString(byteArray) {
+export function toHexString(byteArray: Uint8Array): string {
     let sb = '';
     byteArray.forEach(b => {
         if (sb != '') { sb += ' ' }
@@ -127,6 +127,6 @@ export function toHexString(byteArray) {
     return sb;
 }
 
-export function write(s) { process.stdout.write(s) }
-export function writeln(s = "") { write(s + "\n") }
+export function write(s: string): void { process.stdout.write(s) }
+export function writeln(s = ""): void { write(s + "\n") }
 
