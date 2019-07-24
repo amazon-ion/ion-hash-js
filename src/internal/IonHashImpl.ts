@@ -33,17 +33,17 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     }
 
     // implements IonReader
-    annotations()   : string[]  { return this._reader.annotations() }
-    booleanValue()  : boolean   { return this._reader.booleanValue() }
-    byteValue()     : Uint8Array  { return this._reader.byteValue() }
-    decimalValue()  : Decimal   { return this._reader.decimalValue() }
-    depth()         : number    { return this._reader.depth() }
-    fieldName()     : string    { return this._reader.fieldName() }
-    isNull()        : boolean   { return this._reader.isNull() }
-    numberValue()   : number    { return this._reader.numberValue() }
-    stringValue()   : string    { return this._reader.stringValue() }
-    timestampValue(): Timestamp { return this._reader.timestampValue() }
-    value()         : any       { return this._reader.value() }
+    annotations()   : string[]   { return this._reader.annotations() }
+    booleanValue()  : boolean    { return this._reader.booleanValue() }
+    byteValue()     : Uint8Array { return this._reader.byteValue() }
+    decimalValue()  : Decimal    { return this._reader.decimalValue() }
+    depth()         : number     { return this._reader.depth() }
+    fieldName()     : string     { return this._reader.fieldName() }
+    isNull()        : boolean    { return this._reader.isNull() }
+    numberValue()   : number     { return this._reader.numberValue() }
+    stringValue()   : string     { return this._reader.stringValue() }
+    timestampValue(): Timestamp  { return this._reader.timestampValue() }
+    value()         : any        { return this._reader.value() }
 
     private _traverse() {
         for (let type; type = this.next(); ) {
