@@ -24,11 +24,11 @@ let binaryReaderDigester: Digester = (ionData: string | Uint8Array, algorithm: s
     writer.close();
     let ionBinary = writer.getBytes();
     readerDigester(ion.makeReader(ionBinary), algorithm, hasherLog);
-}
+};
 
 let textReaderDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
     readerDigester(ion.makeReader(ionData), algorithm, hasherLog);
-}
+};
 
 function readerDigester(reader: IonReader, algorithm: string, hasherLog: string[]): void {
     function traverse(reader: IonReader) {
@@ -52,15 +52,15 @@ let readerSkipDigester: Digester = (ionData: string | Uint8Array, algorithm: str
     hashReader.next();
     hashReader.next();
     hashReader.digest();
-}
+};
 
 let binaryWriterDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
     writerDigester(ion.makeBinaryWriter(), ionData, algorithm, hasherLog);
-}
+};
 
 let textWriterDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
     writerDigester(ion.makeTextWriter(), ionData, algorithm, hasherLog);
-}
+};
 
 function writerDigester(writer: IonWriter, ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
     let reader = ion.makeReader(ionData);
