@@ -1,13 +1,13 @@
-import { Tests } from "intern/lib/interfaces/object";
+import {Tests} from "intern/lib/interfaces/object";
 
-const { registerSuite } = intern.getPlugin('interface.object');
-const { assert } = intern.getPlugin('chai');
-import { readFileSync } from 'fs';
+const {registerSuite} = intern.getPlugin('interface.object');
+const {assert} = intern.getPlugin('chai');
+import {readFileSync} from 'fs';
 
 import * as ion from 'ion-js';
-import { Reader as IonReader, Writer as IonWriter } from 'ion-js';
-import { makeHashReader, makeHashWriter } from '../src/IonHash';
-import { sexpToBytes, testIonHasherProvider, toHexString, toString, writeln, writeTo } from './testutil';
+import {Reader as IonReader, Writer as IonWriter} from 'ion-js';
+import {makeHashReader, makeHashWriter} from '../src/IonHash';
+import {sexpToBytes, testIonHasherProvider, toHexString, toString, writeln, writeTo} from './testutil';
 
 // builds a test suite based on the contents of ion_hash_tests.ion
 

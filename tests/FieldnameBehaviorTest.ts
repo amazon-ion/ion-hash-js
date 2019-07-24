@@ -1,8 +1,9 @@
-const { registerSuite } = intern.getPlugin('interface.object');
-const { assert } = intern.getPlugin('chai');
+const {registerSuite} = intern.getPlugin('interface.object');
+const {assert} = intern.getPlugin('chai');
+
 import * as ion from 'ion-js';
-import { makeHashReader, makeHashWriter } from '../src/IonHash';
-import { sexpStringToBytes, testIonHasherProvider, writeTo } from './testutil';
+import {makeHashReader, makeHashWriter} from '../src/IonHash';
+import {sexpStringToBytes, testIonHasherProvider, writeTo} from './testutil';
 
 registerSuite('FieldnameBehavior', {
     null:       () => { test("null", "(0x0b 0x0f 0x0e)") },

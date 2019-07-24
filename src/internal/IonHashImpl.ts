@@ -1,7 +1,8 @@
 import * as ion from 'ion-js';
-import { Decimal, IonType, IonTypes, Reader as IonReader, Timestamp, TypeCodes, Writer as IonWriter } from 'ion-js';
+import {Decimal, IonType, IonTypes, Reader as IonReader, Timestamp, TypeCodes, Writer as IonWriter} from 'ion-js';
 
-import { createHash, Hash } from 'crypto';
+import {createHash, Hash} from 'crypto';
+
 import {IonHasher, IonHasherProvider, IonHashReader, IonHashWriter} from "../IonHash";
 
 export class _CryptoIonHasher implements IonHasher {

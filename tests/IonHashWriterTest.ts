@@ -1,10 +1,10 @@
-const { registerSuite } = intern.getPlugin('interface.object');
-const { assert } = intern.getPlugin('chai');
+const {registerSuite} = intern.getPlugin('interface.object');
+const {assert} = intern.getPlugin('chai');
 
 import * as ion from 'ion-js';
 import {TypeCodes} from 'ion-js';
 
-import {IonHashReader, makeHashWriter} from '../src/IonHash';
+import {makeHashWriter} from '../src/IonHash';
 import {testIonHasherProvider} from './testutil';
 
 registerSuite('IonHashWriter', {

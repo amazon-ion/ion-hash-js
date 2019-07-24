@@ -23,12 +23,10 @@ module.exports = function(grunt) {
     intern: {
       es5: {
         options: {
-          //reporters: ['pretty'],
           reporters: ['runner'],
           suites: [
-            'dist/commonjs/es5/**/*.js', '!dist/commonjs/es5/**/BigListOfNaughtyStringsTests.js',
-            //'!dist/commonjs/es5/**/IonHashTests.js',
-            '!dist/commonjs/es5/**/reproductions.js',
+            'dist/commonjs/es5/**/*.js',
+            '!dist/commonjs/es5/**/BigListOfNaughtyStringsTests.js',  // https://github.com/amzn/ion-hash-js/issues/6
           ],
         },
       },

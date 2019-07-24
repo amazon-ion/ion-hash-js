@@ -1,11 +1,11 @@
-const { registerSuite } = intern.getPlugin('interface.object');
-const { assert } = intern.getPlugin('chai');
+const {registerSuite} = intern.getPlugin('interface.object');
+const {assert} = intern.getPlugin('chai');
 
 import * as ion from 'ion-js';
-import { Decimal, IonType, IonTypes, Reader as IonReader, Timestamp } from 'ion-js';
+import {Decimal, IonType, IonTypes, Reader as IonReader, Timestamp} from 'ion-js';
 
-import { IonHashReader, makeHashReader } from '../src/IonHash';
-import {sexpToBytes, testIonHasherProvider, toHexString, writeln} from './testutil';
+import {IonHashReader, makeHashReader} from '../src/IonHash';
+import {sexpToBytes, testIonHasherProvider} from './testutil';
 
 class ReaderComparer implements IonReader {
     constructor(private readerA: IonReader, private readerB: IonReader) { }

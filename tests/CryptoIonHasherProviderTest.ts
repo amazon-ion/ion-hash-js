@@ -1,10 +1,10 @@
 import {makeReader, makeTextWriter} from 'ion-js';
 
-const { registerSuite } = intern.getPlugin('interface.object');
-const { assert } = intern.getPlugin('chai');
+const {registerSuite} = intern.getPlugin('interface.object');
+const {assert} = intern.getPlugin('chai');
 
-import { cryptoIonHasherProvider, makeHashReader, makeHashWriter } from '../src/IonHash';
-import { toHexString } from './testutil';
+import {cryptoIonHasherProvider, makeHashReader, makeHashWriter} from '../src/IonHash';
+import {toHexString} from './testutil';
 
 registerSuite('CryptoIonHasherProviderTests', {
     cryptoMD5reader: () => {

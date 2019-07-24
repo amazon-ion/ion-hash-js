@@ -1,7 +1,7 @@
-import { Reader as IonReader } from 'ion-js';
-import { Writer as IonWriter } from 'ion-js';
+import {Reader as IonReader} from 'ion-js';
+import {Writer as IonWriter} from 'ion-js';
 
-import { _HashReaderImpl, _HashWriterImpl, _CryptoIonHasher } from './internal/IonHashImpl';
+import {_HashReaderImpl, _HashWriterImpl, _CryptoIonHasher} from './internal/IonHashImpl';
 
 /**
  * Wraps the provided IonReader as an IonHashReader.

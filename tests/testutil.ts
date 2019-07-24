@@ -1,8 +1,8 @@
 import * as ion from 'ion-js';
-import { IonType, Reader as IonReader, Writer as IonWriter } from 'ion-js';
-import { IonHasher, IonHasherProvider } from "../src/IonHash";
+import {IonType, Reader as IonReader, Writer as IonWriter} from 'ion-js';
 
-import { createHash, Hash } from 'crypto';
+import {IonHasher, IonHasherProvider} from "../src/IonHash";
+import {createHash, Hash} from 'crypto';
 
 class IdentityIonHasher implements IonHasher {
     private allBytes: number[] = [];

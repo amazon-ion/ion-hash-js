@@ -1,6 +1,6 @@
-const { registerSuite } = intern.getPlugin('interface.object');
-const { assert } = intern.getPlugin('chai');
-import { _Uint8ArrayComparator } from '../src/internal/IonHashImpl';
+const {registerSuite} = intern.getPlugin('interface.object');
+const {assert} = intern.getPlugin('chai');
+import {_Uint8ArrayComparator} from '../src/internal/IonHashImpl';
 
 registerSuite('_Uint8ArrayComparator', {
     equals: () => { test([0x01, 0x02, 0x03], [0x01, 0x02, 0x03], 0); },

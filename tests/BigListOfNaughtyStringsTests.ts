@@ -1,11 +1,11 @@
-const { registerSuite } = intern.getPlugin('interface.object');
-const { assert } = intern.getPlugin('chai');
-import { readFileSync } from 'fs';
+const {registerSuite} = intern.getPlugin('interface.object');
+const {assert} = intern.getPlugin('chai');
+import {readFileSync} from 'fs';
 
 import * as ion from 'ion-js';
 
-import { IonHashReader, IonHashWriter, makeHashReader, makeHashWriter } from '../src/IonHash';
-import { testIonHasherProvider, toHexString, writeln, writeTo } from './testutil';
+import {IonHashReader, IonHashWriter, makeHashReader, makeHashWriter} from '../src/IonHash';
+import {testIonHasherProvider, toHexString, writeln, writeTo} from './testutil';
 
 class TestValue {
     private static ionPrefix = 'ion::';
