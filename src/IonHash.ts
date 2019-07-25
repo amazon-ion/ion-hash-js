@@ -33,13 +33,14 @@ export function makeHashWriter(writer: IonWriter,
  */
 export interface IonHashReader extends IonReader {
     /**
-     * Provides the Ion hash of the value just nexted past.
+     * Provides the Ion hash of the previous value (where IonReader.next()
+     * positions the reader at a new current value).
      *
-     * Implementations must calculate the hash independently of how the Ion
-     * is traversed (e.g., the hash of a container must be identical whether
+     * Implementations must calculate the hash independent of how the Ion value
+     * is traversed (i.e., the hash of a container must be identical whether
      * the caller skips over it, steps into it, or any combination thereof).
      *
-     * @return bytes representing the Ion hash of the value just nexted past
+     * @return bytes representing the Ion hash of the previous value
      * @throws if invoked at a different depth than when the IonHashReader was instantiated
      */
     digest(): Uint8Array;
@@ -65,7 +66,7 @@ export interface IonHashWriter extends IonWriter {
  * Implementations of this function type interface create an IonHasher
  * instance when invoked.
  *
- * @sse [[cryptoIonHasherProvider]]
+ * @see [[cryptoIonHasherProvider]]
  */
 export interface IonHasherProvider {
     (): IonHasher;
@@ -96,7 +97,7 @@ export interface IonHasher {
  * An IonHasherProvider implementation backed by node's [crypto](https://node.readthedocs.io/en/latest/api/crypto/)
  * module.
  *
- * @param algorithm specifies the algorithm use when invoking `crypto.createHash()`
+ * @param algorithm specifies the algorithm to use when invoking `crypto.createHash()`
  *                  (e.g., 'sha1', 'md5', 'sha256', 'sha512')
  * @throws if the specified algorithm isn't supported
  */

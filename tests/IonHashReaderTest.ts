@@ -1,8 +1,7 @@
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 
-import * as ion from 'ion-js';
-import {Decimal, IonType, IonTypes, Reader as IonReader, Timestamp} from 'ion-js';
+import {Decimal, IonType, IonTypes, makeReader, Reader as IonReader, Timestamp} from 'ion-js';
 
 import {IonHashReader, makeHashReader} from '../src/IonHash';
 import {sexpToBytes, testIonHasherProvider} from './testutil';
@@ -77,15 +76,15 @@ class ReaderComparer implements IonReader {
 function traverse(reader: IonReader) {
     for (let type; type = reader.next(); ) {
         switch (type) {
-            case ion.IonTypes.BOOL:      { reader.booleanValue(); break }
-            case ion.IonTypes.INT:       { reader.numberValue(); break }
-            case ion.IonTypes.FLOAT:     { reader.numberValue(); break }
-            case ion.IonTypes.DECIMAL:   { reader.decimalValue(); break }
-            case ion.IonTypes.TIMESTAMP: { reader.timestampValue(); break }
-            case ion.IonTypes.SYMBOL:    { reader.stringValue(); break }
-            case ion.IonTypes.STRING:    { reader.stringValue(); break }
-            case ion.IonTypes.CLOB:      { reader.byteValue(); break }
-            case ion.IonTypes.BLOB:      { reader.byteValue(); break }
+            case IonTypes.BOOL:      { reader.booleanValue(); break }
+            case IonTypes.INT:       { reader.numberValue(); break }
+            case IonTypes.FLOAT:     { reader.numberValue(); break }
+            case IonTypes.DECIMAL:   { reader.decimalValue(); break }
+            case IonTypes.TIMESTAMP: { reader.timestampValue(); break }
+            case IonTypes.SYMBOL:    { reader.stringValue(); break }
+            case IonTypes.STRING:    { reader.stringValue(); break }
+            case IonTypes.CLOB:      { reader.byteValue(); break }
+            case IonTypes.BLOB:      { reader.byteValue(); break }
         }
         reader.isNull();
         reader.value();
@@ -117,7 +116,7 @@ registerSuite('IonHashReader', {
     verifyNestingBehavior: () => { test('{ a:1, b: [1, (2 3 4), 5], c: "hello" }') },
 
     emptyString: () => {
-        let hashReader = makeHashReader(ion.makeReader(''), testIonHasherProvider('identity'));
+        let hashReader = makeHashReader(makeReader(''), testIonHasherProvider('identity'));
         assert.isUndefined(hashReader.next());
         assert.deepEqual(hashReader.digest(), new Uint8Array());
         assert.isUndefined(hashReader.next());
@@ -125,7 +124,7 @@ registerSuite('IonHashReader', {
     },
 
     topLevelValues: () => {
-        let hashReader = makeHashReader(ion.makeReader('1 2 3'), testIonHasherProvider('identity'));
+        let hashReader = makeHashReader(makeReader('1 2 3'), testIonHasherProvider('identity'));
 
         assert.equal(hashReader.next(), IonTypes.INT);
         assert.deepEqual(hashReader.digest(), new Uint8Array());
@@ -147,7 +146,7 @@ registerSuite('IonHashReader', {
         let md5initialDigest = Uint8Array.from(
             [0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04, 0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e]);
 
-        let hashReader = makeHashReader(ion.makeReader('null'), testIonHasherProvider('md5'));
+        let hashReader = makeHashReader(makeReader('null'), testIonHasherProvider('md5'));
 
         assert.deepEqual(hashReader.digest(), md5initialDigest);
 
@@ -164,7 +163,7 @@ registerSuite('IonHashReader', {
 
     digestTooEarly: () => {
         let str = '{ a: 1, b: 2 }';
-        let hashReader = makeHashReader(ion.makeReader(str), testIonHasherProvider('identity'));
+        let hashReader = makeHashReader(makeReader(str), testIonHasherProvider('identity'));
         hashReader.next();
         hashReader.stepIn();
         assert.throws(() => { hashReader.digest() });
@@ -172,7 +171,7 @@ registerSuite('IonHashReader', {
 
     digestTooLate: () => {
         let str = '{ a: 1, b: 2 }';
-        let reader = ion.makeReader(str);
+        let reader = makeReader(str);
         reader.next();
         reader.stepIn();
 
@@ -234,25 +233,25 @@ registerSuite('IonHashReader', {
 
 let test = (ionStr: string) => {
     let readerComparer = new ReaderComparer(
-        ion.makeReader(ionStr),
-        makeHashReader(ion.makeReader(ionStr), testIonHasherProvider('identity')));
+        makeReader(ionStr),
+        makeHashReader(makeReader(ionStr), testIonHasherProvider('identity')));
     traverse(readerComparer);
 };
 
 let consume = (consumer: (hr: IonHashReader) => void) => {
-    let reader = ion.makeReader('(0x0b 0xb0'
-                              + '   0x0b 0x20 0x01 0x0e'
-                              + '   0x0b 0x20 0x02 0x0e'
-                              + '   0x0b 0xd0'
-                              + '     0x0c 0x0b 0x70 0x61 0x0c 0x0e 0x0c 0x0b 0x20 0x03 0x0c 0x0e'
-                              + '     0x0c 0x0b 0x70 0x62 0x0c 0x0e 0x0c 0x0b 0x20 0x04 0x0c 0x0e'
-                              + '   0x0e'
-                              + '   0x0b 0x20 0x05 0x0e'
-                              + ' 0x0e)');
+    let reader = makeReader('(0x0b 0xb0'
+                          + '   0x0b 0x20 0x01 0x0e'
+                          + '   0x0b 0x20 0x02 0x0e'
+                          + '   0x0b 0xd0'
+                          + '     0x0c 0x0b 0x70 0x61 0x0c 0x0e 0x0c 0x0b 0x20 0x03 0x0c 0x0e'
+                          + '     0x0c 0x0b 0x70 0x62 0x0c 0x0e 0x0c 0x0b 0x20 0x04 0x0c 0x0e'
+                          + '   0x0e'
+                          + '   0x0b 0x20 0x05 0x0e'
+                          + ' 0x0e)');
     reader.next();
     let expectedBytes = sexpToBytes(reader);
 
-    let hr = makeHashReader(ion.makeReader('[1,2,{a:3,b:4},5]'), testIonHasherProvider('identity'));
+    let hr = makeHashReader(makeReader('[1,2,{a:3,b:4},5]'), testIonHasherProvider('identity'));
     assert.deepEqual(hr.digest(), new Uint8Array());
     consumer(hr);
 

@@ -1,5 +1,5 @@
-import * as ion from 'ion-js';
-import {Decimal, IonType, IonTypes, Reader as IonReader, Timestamp, TypeCodes, Writer as IonWriter} from 'ion-js';
+import {Decimal, IonType, IonTypes, makeBinaryWriter,
+        Reader as IonReader, Timestamp, TypeCodes, Writer as IonWriter} from 'ion-js';
 
 import {createHash, Hash} from 'crypto';
 
@@ -17,7 +17,7 @@ export class _CryptoIonHasher implements IonHasher {
 
 
 interface _IonValue {
-    _annotations(): string[] | undefined;
+    _annotations(): string[];
     _fieldName(): string | null;
     _isNull(): boolean;
     _type(): IonType | null;
@@ -91,18 +91,18 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     digest(): Uint8Array { return this._hasher._digest() }
 
     // implements _IonValue
-    _annotations(): string[] | undefined { return this.annotations() }
-    _fieldName(): string | null          { return this.fieldName() }
-    _isNull(): boolean                   { return this.isNull() }
-    _type(): IonType | null              { return this._ionType }
-    _value(): any                        { return this.value() }
+    _annotations(): string[]    { return this.annotations() }
+    _fieldName(): string | null { return this.fieldName() }
+    _isNull(): boolean          { return this.isNull() }
+    _type(): IonType | null     { return this._ionType }
+    _value(): any               { return this.value() }
 }
 
 export class _HashWriterImpl implements IonHashWriter, _IonValue {
     private readonly _hasher: _Hasher;
 
     private __ionType: IonType | null = null;
-    private __annotations: string[] | undefined;
+    private __annotations: string[] = [];
     private __fieldName: string | null = null;
     private __isNull: boolean = false;
     private __value: any;
@@ -117,7 +117,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     private _hashScalar(type: IonType, value: any, annotations?: string[]) {
         this.__ionType = type;
         this.__value = value;
-        this.__annotations = annotations;
+        this.__annotations = annotations ? annotations : [];
         this.__isNull = (value == undefined || value == null);
         this._hasher._scalar(this);
         this.__fieldName = null;
@@ -194,7 +194,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
         } else {
             this.__ionType = type;
             this.__value = null;
-            this.__annotations = annotations;
+            this.__annotations = annotations ? annotations : [];
             this.__isNull = false;
             this._hasher._stepIn(this);
             this.__fieldName = null;
@@ -231,11 +231,11 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     digest(): Uint8Array { return this._hasher._digest() }
 
     // implements _IonValue
-    _annotations(): string[] | undefined { return this.__annotations }
-    _fieldName(): string | null          { return this.__fieldName }
-    _isNull(): boolean                   { return this.__isNull }
-    _type(): IonType | null              { return this.__ionType }
-    _value(): any                        { return this.__value }
+    _annotations(): string[]    { return this.__annotations }
+    _fieldName(): string | null { return this.__fieldName }
+    _isNull(): boolean          { return this.__isNull }
+    _type(): IonType | null     { return this.__ionType }
+    _value(): any               { return this.__value }
 }
 
 class _Hasher {
@@ -322,7 +322,7 @@ class _Serializer {
 
     private _handleAnnotationsBegin(ionValue: _IonValue, isContainer=false): void {
         let annotations = ionValue._annotations();
-        if (annotations && annotations.length > 0) {
+        if (annotations.length > 0) {
             this._beginMarker();
             this._update(_TQ_ANNOTATED_VALUE);
             for (let annotation of annotations) {
@@ -335,7 +335,7 @@ class _Serializer {
     }
 
     private _handleAnnotationsEnd(ionValue: _IonValue | null, isContainer=false): void {
-        if ((ionValue && ionValue._annotations() && ionValue._annotations()!.length > 0)
+        if ((ionValue && ionValue._annotations().length > 0)
                 || (isContainer && this._hasContainerAnnotations)) {
             this._endMarker();
             if (isContainer) {
@@ -364,7 +364,7 @@ class _Serializer {
         if (isNull) {
             return Uint8Array.from([type.bid << 4 | 0x0F]);
         } else {
-            let writer = ion.makeBinaryWriter();
+            let writer = makeBinaryWriter();
             _Serializer._serializers[type.name](value, writer);
             writer.close();
             return writer.getBytes().slice(4);

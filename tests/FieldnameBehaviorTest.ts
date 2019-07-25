@@ -1,7 +1,8 @@
+import {makeReader, makeTextWriter} from "ion-js";
+
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 
-import * as ion from 'ion-js';
 import {makeHashReader, makeHashWriter} from '../src/IonHash';
 import {sexpStringToBytes, testIonHasherProvider, writeTo} from './testutil';
 
@@ -32,14 +33,14 @@ function test(ionStr: string, expectedSexpBytes: string) {
     let expectedDigest = sexpStringToBytes(expectedSexpBytes);
 
     // verify IonHashWriter behavior:
-    //let writer = ion.makeBinaryWriter();    // https://github.com/amzn/ion-hash-js/issues/2
-    let writer = ion.makeTextWriter();
+    //let writer = makeBinaryWriter();    // https://github.com/amzn/ion-hash-js/issues/2
+    let writer = makeTextWriter();
     writer.writeStruct();
 
     let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
     hashWriter.writeFieldName("field_name");    // this fieldName should not become part of the hash
 
-    let reader = ion.makeReader(ionStr);
+    let reader = makeReader(ionStr);
     let type = reader.next();
     writeTo(reader, type, hashWriter);
 
@@ -54,7 +55,7 @@ function test(ionStr: string, expectedSexpBytes: string) {
 
 
     // verify IonHashReader behavior:
-    reader = ion.makeReader(bytes);
+    reader = makeReader(bytes);
     reader.next();
     reader.stepIn();
 

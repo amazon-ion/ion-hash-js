@@ -1,8 +1,8 @@
+import {makeBinaryWriter, makeReader} from 'ion-js';
+
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 import {readFileSync} from 'fs';
-
-import * as ion from 'ion-js';
 
 import {IonHashReader, IonHashWriter, makeHashReader, makeHashWriter} from '../src/IonHash';
 import {testIonHasherProvider, toHexString, writeln, writeTo} from './testutil';
@@ -13,36 +13,36 @@ class TestValue {
 
     readonly validIon: boolean | null;
 
-    constructor(public ion: string) {
+    constructor(public inputValue: string) {
         this.validIon = null;
 
-        if (this.ion.startsWith(TestValue.ionPrefix)) {
+        if (this.inputValue.startsWith(TestValue.ionPrefix)) {
             this.validIon = true;
-            this.ion = this.ion.substring(TestValue.ionPrefix.length);
+            this.inputValue = this.inputValue.substring(TestValue.ionPrefix.length);
         }
 
-        if (this.ion.startsWith(TestValue.invalidIonPrefix)) {
+        if (this.inputValue.startsWith(TestValue.invalidIonPrefix)) {
             this.validIon = false;
-            this.ion = this.ion.substring(TestValue.invalidIonPrefix.length);
+            this.inputValue = this.inputValue.substring(TestValue.invalidIonPrefix.length);
         }
     }
 
     symbol() {
-        let s = this.ion;
+        let s = this.inputValue;
         s = s.replace("\\", "\\\\");
         s = s.replace("'", "\\'");
         return "\'" + s + "\'";
     }
 
     string() {
-        let s = this.ion;
+        let s = this.inputValue;
         s = s.replace("\\", "\\\\");
         s = s.replace("\"", "\\\"");
         return "\"" + s + "\"";
     }
 
     long_string() {
-        let s = this.ion;
+        let s = this.inputValue;
         s = s.replace("\\", "\\\\");
         s = s.replace("'", "\\'");
         return "'''" + s + "'''";
@@ -63,7 +63,7 @@ class TestValue {
     }
 
     blob() {
-        let buffer = Buffer.from(this.ion, 'utf8');
+        let buffer = Buffer.from(this.inputValue, 'utf8');
         return '{{' + buffer.toString('base64') + '}}';
     }
 }
@@ -95,10 +95,10 @@ readFileSync('tests/big-list-of-naughty-strings.txt', 'utf-8')
         strings.push(tv.symbol() + "::{" + tv.symbol() + ":" + tv.blob() + "}");
 
         if (tv.validIon) {
-            strings.push(tv.ion);
-            strings.push(tv.symbol() + "::" + tv.ion);
-            strings.push(tv.symbol() + "::{" + tv.symbol() + ":" + tv.ion + "}");
-            strings.push(tv.symbol() + "::{" + tv.symbol() + ":" + tv.symbol() + "::" + tv.ion + "}");
+            strings.push(tv.inputValue);
+            strings.push(tv.symbol() + "::" + tv.inputValue);
+            strings.push(tv.symbol() + "::{" + tv.symbol() + ":" + tv.inputValue + "}");
+            strings.push(tv.symbol() + "::{" + tv.symbol() + ":" + tv.symbol() + "::" + tv.inputValue + "}");
         }
 
         // list
@@ -109,7 +109,7 @@ readFileSync('tests/big-list-of-naughty-strings.txt', 'utf-8')
                 + tv.long_string() + ", "
                 + tv.clob() + ", "
                 + tv.blob() + ", "
-                + (tv.validIon ? tv.ion : '')
+                + (tv.validIon ? tv.inputValue : '')
                 + "]");
 
         // sexp
@@ -120,7 +120,7 @@ readFileSync('tests/big-list-of-naughty-strings.txt', 'utf-8')
                 + tv.long_string() + " "
                 + tv.clob() + " "
                 + tv.blob() + " "
-                + (tv.validIon ? tv.ion : '')
+                + (tv.validIon ? tv.inputValue : '')
                 + ")");
 
         // multiple annotations
@@ -145,9 +145,9 @@ function runTest(testString: string) {
     let tv = new TestValue(testString);
     let hashWriter: IonHashWriter | null = null;
     try {
-        let reader = ion.makeReader(tv.ion);
+        let reader = makeReader(tv.inputValue);
         let type = reader.next();
-        hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider('identity'));
+        hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('identity'));
         writeTo(reader, type, hashWriter);
     } catch (e) {
         if (tv.validIon) {
@@ -157,7 +157,7 @@ function runTest(testString: string) {
 
     let hashReader: IonHashReader | null = null;
     try {
-        let reader = ion.makeReader(tv.ion);
+        let reader = makeReader(tv.inputValue);
         hashReader = makeHashReader(reader, testIonHasherProvider('identity'));
         hashReader.next();
         hashReader.next();

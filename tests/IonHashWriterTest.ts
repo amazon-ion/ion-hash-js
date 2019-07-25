@@ -1,15 +1,14 @@
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 
-import * as ion from 'ion-js';
-import {TypeCodes} from 'ion-js';
+import {makeBinaryWriter, makeTextWriter, TypeCodes} from 'ion-js';
 
 import {makeHashWriter} from '../src/IonHash';
 import {testIonHasherProvider} from './testutil';
 
 registerSuite('IonHashWriter', {
     topLevelValues: () => {
-        let writer = ion.makeTextWriter();
+        let writer = makeTextWriter();
         let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
 
         assert.deepEqual(hashWriter.digest(), new Uint8Array());
@@ -31,7 +30,7 @@ registerSuite('IonHashWriter', {
         let md5initialDigest = Uint8Array.from(
             [0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04, 0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e]);
 
-        let writer = ion.makeTextWriter();
+        let writer = makeTextWriter();
         let hashWriter = makeHashWriter(writer, testIonHasherProvider('md5'));
 
         assert.deepEqual(hashWriter.digest(), md5initialDigest);
@@ -42,7 +41,7 @@ registerSuite('IonHashWriter', {
     },
 
     writeScalarNull: () => {
-        let writer = ion.makeTextWriter();
+        let writer = makeTextWriter();
         let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
 
         hashWriter.writeNull(TypeCodes.STRING);
@@ -55,7 +54,7 @@ registerSuite('IonHashWriter', {
     },
 
     writeContainerNull: () => {
-        let writer = ion.makeTextWriter();
+        let writer = makeTextWriter();
         let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
 
         hashWriter.writeNull(TypeCodes.LIST);
@@ -68,7 +67,7 @@ registerSuite('IonHashWriter', {
     },
 
     digestTooEarly: () => {
-        let hashWriter = makeHashWriter(ion.makeBinaryWriter(), testIonHasherProvider('identity'));
+        let hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('identity'));
         hashWriter.writeStruct();
         hashWriter.writeFieldName('a');
         hashWriter.writeInt(5);
@@ -76,7 +75,7 @@ registerSuite('IonHashWriter', {
     },
 
     digestTooLate: () => {
-        let writer = ion.makeBinaryWriter();
+        let writer = makeBinaryWriter();
         writer.writeStruct();
 
         let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));

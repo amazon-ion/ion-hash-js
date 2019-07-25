@@ -1,5 +1,4 @@
-import * as ion from 'ion-js';
-import {IonType, Reader as IonReader, Writer as IonWriter} from 'ion-js';
+import {IonType, IonTypes, makeReader, makeTextWriter, Reader as IonReader, Writer as IonWriter} from 'ion-js';
 
 import {IonHasher, IonHasherProvider} from "../src/IonHash";
 import {createHash, Hash} from 'crypto';
@@ -56,7 +55,7 @@ export function testIonHasherProvider(algorithm: string, log?: string[]): IonHas
 
 
 export function sexpStringToBytes(sexpStr: string): Uint8Array {
-    let reader = ion.makeReader(sexpStr);
+    let reader = makeReader(sexpStr);
     reader.next();
     return sexpToBytes(reader);
 }
@@ -78,7 +77,7 @@ export function sexpToBytes(reader: IonReader, options = { asIonBinary: false })
 
 
 export function toString(reader: IonReader, type: IonType): string {
-    let writer = ion.makeTextWriter();
+    let writer = makeTextWriter();
     writeTo(reader, type, writer);
     return String.fromCharCode.apply(null, writer.getBytes());
 }
@@ -93,18 +92,18 @@ export function writeTo(reader: IonReader, type: IonType, writer: IonWriter, dep
         writer.writeNull(type.bid, reader.annotations());
     } else {
         switch (type) {
-            case ion.IonTypes.BOOL:      { writer.writeBoolean(reader.booleanValue(), reader.annotations()); break }
-            case ion.IonTypes.INT:       { writer.writeInt(reader.numberValue(), reader.annotations()); break }
-            case ion.IonTypes.FLOAT:     { writer.writeFloat64(reader.numberValue(), reader.annotations()); break }
-            case ion.IonTypes.DECIMAL:   { writer.writeDecimal(reader.decimalValue(), reader.annotations()); break }
-            case ion.IonTypes.TIMESTAMP: { writer.writeTimestamp(reader.timestampValue(), reader.annotations()); break }
-            case ion.IonTypes.SYMBOL:    { writer.writeSymbol(reader.stringValue(), reader.annotations()); break }
-            case ion.IonTypes.STRING:    { writer.writeString(reader.stringValue(), reader.annotations()); break }
-            case ion.IonTypes.CLOB:      { writer.writeClob(reader.byteValue(), reader.annotations()); break }
-            case ion.IonTypes.BLOB:      { writer.writeBlob(reader.byteValue(), reader.annotations()); break }
-            case ion.IonTypes.LIST:      { writer.writeList(reader.annotations()); break }
-            case ion.IonTypes.SEXP:      { writer.writeSexp(reader.annotations()); break }
-            case ion.IonTypes.STRUCT:    { writer.writeStruct(reader.annotations()); break }
+            case IonTypes.BOOL:      { writer.writeBoolean(reader.booleanValue(), reader.annotations()); break }
+            case IonTypes.INT:       { writer.writeInt(reader.numberValue(), reader.annotations()); break }
+            case IonTypes.FLOAT:     { writer.writeFloat64(reader.numberValue(), reader.annotations()); break }
+            case IonTypes.DECIMAL:   { writer.writeDecimal(reader.decimalValue(), reader.annotations()); break }
+            case IonTypes.TIMESTAMP: { writer.writeTimestamp(reader.timestampValue(), reader.annotations()); break }
+            case IonTypes.SYMBOL:    { writer.writeSymbol(reader.stringValue(), reader.annotations()); break }
+            case IonTypes.STRING:    { writer.writeString(reader.stringValue(), reader.annotations()); break }
+            case IonTypes.CLOB:      { writer.writeClob(reader.byteValue(), reader.annotations()); break }
+            case IonTypes.BLOB:      { writer.writeBlob(reader.byteValue(), reader.annotations()); break }
+            case IonTypes.LIST:      { writer.writeList(reader.annotations()); break }
+            case IonTypes.SEXP:      { writer.writeSexp(reader.annotations()); break }
+            case IonTypes.STRUCT:    { writer.writeStruct(reader.annotations()); break }
             default: throw new Error('unrecognized type' + type);
         }
         if (type.container) {
