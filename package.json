@@ -1,0 +1,39 @@
+{
+  "name": "ion-hash-js",
+  "version": "0.1.0-SNAPSHOT",
+  "description": "JavaScript implementation of Amazon Ion Hash",
+  "main": "dist/commonjs/es5/IonHash.js",
+  "types": "dist/commonjs/es5/IonHash.d.ts",
+  "scripts": {
+    "test": "grunt test",
+    "release": "grunt release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amzn/ion-hash-js.git"
+  },
+  "keywords": [
+    "ion",
+    "hash"
+  ],
+  "author": "The Ion Team <ion-team@amazon.com> (https://amzn.github.io/ion-docs/)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/amzn/ion-hash-js/issues"
+  },
+  "homepage": "https://github.com/amzn/ion-hash-js#readme",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-ts": "^6.0.0-beta.19",
+    "grunt-typedoc": "^0.2.4",
+    "intern": "^4.4.3",
+    "typedoc": "^0.14.2",
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "ion-js": "^3.0.0-beta.3"
+  }
+}
+
