@@ -53,19 +53,6 @@ registerSuite('IonHashWriter', {
         assert.deepEqual(writeStringDigest, writeNullDigest);
     },
 
-    writeContainerNull: () => {
-        let writer = makeTextWriter();
-        let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
-
-        hashWriter.writeNull(IonTypes.LIST);
-        let writeNullDigest = hashWriter.digest();
-
-        hashWriter.stepIn(IonTypes.LIST);
-        let writeListDigest = hashWriter.digest();
-
-        assert.deepEqual(writeListDigest, writeNullDigest);
-    },
-
     digestTooEarly: () => {
         let hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('identity'));
         hashWriter.stepIn(IonTypes.STRUCT);

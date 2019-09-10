@@ -91,17 +91,20 @@ function traverse(reader: IonReader) {
             case IonTypes.BLOB:      { reader.byteValue(); break }
         }
         reader.isNull();
-        reader.value();
-        if (type.container && !reader.isNull()) {
-            reader.stepIn();
-            traverse(reader);
-            reader.stepOut();
+        if (!type.container) {
+            reader.value();
+        } else {
+            if (!reader.isNull()) {
+                reader.stepIn();
+                traverse(reader);
+                reader.stepOut();
+            }
         }
     }
 }
 
 registerSuite('IonHashReader', {
-    verifyTypeBehavior: () => { test(
+    verifyTypeBehavior: () => { readerCompareTest(
           'null'
         + ' true'
         + ' 1'
@@ -117,13 +120,14 @@ registerSuite('IonHashReader', {
         + ' (1 2 3)'
         + ' { c:3, a:1, b:2 }'
         + ' hello::null') },
-    verifyNestingBehavior: () => { test('{ a:1, b: [1, (2 3 4), 5], c: "hello" }') },
+
+    verifyNestingBehavior: () => { readerCompareTest('{ a:1, b: [1, (2 3 4), 5], c: "hello" }') },
 
     emptyString: () => {
         let hashReader = makeHashReader(makeReader(''), testIonHasherProvider('identity'));
-        assert.isUndefined(hashReader.next());
+        assert.isNull(hashReader.next());
         assert.deepEqual(hashReader.digest(), new Uint8Array());
-        assert.isUndefined(hashReader.next());
+        assert.isNull(hashReader.next());
         assert.deepEqual(hashReader.digest(), new Uint8Array());
     },
 
@@ -139,10 +143,10 @@ registerSuite('IonHashReader', {
         assert.equal(hashReader.next(), IonTypes.INT);
         assert.deepEqual(hashReader.digest(), Uint8Array.from([0x0b, 0x20, 0x02, 0x0e]));
 
-        assert.isUndefined(hashReader.next());
+        assert.isNull(hashReader.next());
         assert.deepEqual(hashReader.digest(), Uint8Array.from([0x0b, 0x20, 0x03, 0x0e]));
 
-        assert.isUndefined(hashReader.next());
+        assert.isNull(hashReader.next());
         assert.deepEqual(hashReader.digest(), new Uint8Array());
     },
 
@@ -157,11 +161,11 @@ registerSuite('IonHashReader', {
         assert.equal(hashReader.next(), IonTypes.NULL);
         assert.deepEqual(hashReader.digest(), md5initialDigest);
 
-        assert.isUndefined(hashReader.next());
+        assert.isNull(hashReader.next());
         assert.deepEqual(hashReader.digest(), Uint8Array.from(
             [0x0f, 0x50, 0xc5, 0xe5, 0xe8, 0x77, 0xb4, 0x45, 0x1a, 0xa9, 0xfe, 0x77, 0xc3, 0x76, 0xcd, 0xe4]));
 
-        assert.isUndefined(hashReader.next());
+        assert.isNull(hashReader.next());
         assert.deepEqual(hashReader.digest(), md5initialDigest);
     },
 
@@ -235,7 +239,7 @@ registerSuite('IonHashReader', {
     },
 });
 
-let test = (ionStr: string) => {
+let readerCompareTest = (ionStr: string) => {
     let readerComparer = new ReaderComparer(
         makeReader(ionStr),
         makeHashReader(makeReader(ionStr), testIonHasherProvider('identity')));
@@ -260,7 +264,7 @@ let consume = (consumer: (hr: IonHashReader) => void) => {
     consumer(hr);
 
     assert.deepEqual(hr.digest(), expectedBytes);
-    assert.isUndefined(hr.next());
+    assert.isNull(hr.next());
     assert.deepEqual(hr.digest(), new Uint8Array());
 }
 
