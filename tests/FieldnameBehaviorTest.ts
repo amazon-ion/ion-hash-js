@@ -1,4 +1,4 @@
-import {makeReader, makeTextWriter} from "ion-js";
+import {IonTypes, makeReader, makeTextWriter} from "ion-js";
 
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
@@ -35,7 +35,7 @@ function test(ionStr: string, expectedSexpBytes: string) {
     // verify IonHashWriter behavior:
     //let writer = makeBinaryWriter();    // https://github.com/amzn/ion-hash-js/issues/2
     let writer = makeTextWriter();
-    writer.writeStruct();
+    writer.stepIn(IonTypes.STRUCT);
 
     let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
     hashWriter.writeFieldName("field_name");    // this fieldName should not become part of the hash
@@ -47,7 +47,7 @@ function test(ionStr: string, expectedSexpBytes: string) {
     let writerActualDigest = hashWriter.digest();
 
     assert.deepEqual(writerActualDigest, expectedDigest);
-    writer.endContainer();
+    writer.stepOut();
 
     hashWriter.close();
     writer.close();

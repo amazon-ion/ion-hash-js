@@ -1,4 +1,4 @@
-import {makeReader, makeTextWriter} from 'ion-js';
+import {IonTypes, makeReader, makeTextWriter} from 'ion-js';
 
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
@@ -26,24 +26,24 @@ registerSuite('CryptoIonHasherProviderTests', {
         let writer = makeTextWriter();
         let hashWriter = makeHashWriter(writer, cryptoIonHasherProvider('md5'));
 
-        hashWriter.writeList();
+        hashWriter.stepIn(IonTypes.LIST);
           hashWriter.writeInt(1);
           hashWriter.writeInt(2);
-          hashWriter.writeStruct();
+          hashWriter.stepIn(IonTypes.STRUCT);
             hashWriter.writeFieldName('a');
             hashWriter.writeInt(3);
             hashWriter.writeFieldName('b');
-            hashWriter.writeSexp();
+            hashWriter.stepIn(IonTypes.SEXP);
               hashWriter.writeInt(4);
-              hashWriter.writeStruct();
+              hashWriter.stepIn(IonTypes.STRUCT);
                 hashWriter.writeFieldName('c');
                 hashWriter.writeInt(5);
-              hashWriter.endContainer();
+              hashWriter.stepOut();
               hashWriter.writeInt(6);
-            hashWriter.endContainer();
-          hashWriter.endContainer();
+            hashWriter.stepOut();
+          hashWriter.stepOut();
           hashWriter.writeInt(7);
-        hashWriter.endContainer();
+        hashWriter.stepOut();
 
         let actualDigest = hashWriter.digest();
         assert.equal(toHexString(actualDigest), expectedDigest);

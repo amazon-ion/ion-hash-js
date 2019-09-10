@@ -1,39 +1,39 @@
-import {Reader as IonReader} from 'ion-js';
-import {Writer as IonWriter} from 'ion-js';
+import {Reader} from 'ion-js';
+import {Writer} from 'ion-js';
 
 import {_HashReaderImpl, _HashWriterImpl, _CryptoIonHasher} from './internal/IonHashImpl';
 
 /**
- * Wraps the provided IonReader as an IonHashReader.
+ * Wraps the provided Reader as an IonHashReader.
  *
  * @param reader
  * @param hashFunctionProvider
  */
-export function makeHashReader(reader: IonReader,
+export function makeHashReader(reader: Reader,
                                hashFunctionProvider: IonHasherProvider): IonHashReader {
     return new _HashReaderImpl(reader, hashFunctionProvider);
 }
 
 /**
- * Wraps the provided IonWriter as an IonHashWriter.
+ * Wraps the provided Writer as an IonHashWriter.
  *
  * @param writer
  * @param hashFunctionProvider
  */
-export function makeHashWriter(writer: IonWriter,
+export function makeHashWriter(writer: Writer,
                                hashFunctionProvider: IonHasherProvider): IonHashWriter {
     return new _HashWriterImpl(writer, hashFunctionProvider);
 }
 
 
 /**
- * IonReader decorator that computes the Ion hash of values read.
+ * Reader decorator that computes the Ion hash of values read.
  *
  * @see Reader
  */
-export interface IonHashReader extends IonReader {
+export interface IonHashReader extends Reader {
     /**
-     * Provides the Ion hash of the previous value (where IonReader.next()
+     * Provides the Ion hash of the previous value (where Reader.next()
      * positions the reader at a new current value).
      *
      * Implementations must calculate the hash independent of how the Ion value
@@ -47,11 +47,11 @@ export interface IonHashReader extends IonReader {
 }
 
 /**
- * IonWriter decorator that computes the Ion hash of written values.
+ * Writer decorator that computes the Ion hash of written values.
  *
  * @see Writer
  */
-export interface IonHashWriter extends IonWriter {
+export interface IonHashWriter extends Writer {
     /**
      * Provides the Ion hash of the value just written.
      *

@@ -88,22 +88,23 @@ export function writeTo(reader: IonReader, type: IonType, writer: IonWriter, dep
             writer.writeFieldName(reader.fieldName());
         }
     }
+    writer.setAnnotations(reader.annotations());
     if (reader.isNull()) {
-        writer.writeNull(type.bid, reader.annotations());
+        writer.writeNull(type);
     } else {
         switch (type) {
-            case IonTypes.BOOL:      { writer.writeBoolean(reader.booleanValue(), reader.annotations()); break }
-            case IonTypes.INT:       { writer.writeInt(reader.numberValue(), reader.annotations()); break }
-            case IonTypes.FLOAT:     { writer.writeFloat64(reader.numberValue(), reader.annotations()); break }
-            case IonTypes.DECIMAL:   { writer.writeDecimal(reader.decimalValue(), reader.annotations()); break }
-            case IonTypes.TIMESTAMP: { writer.writeTimestamp(reader.timestampValue(), reader.annotations()); break }
-            case IonTypes.SYMBOL:    { writer.writeSymbol(reader.stringValue(), reader.annotations()); break }
-            case IonTypes.STRING:    { writer.writeString(reader.stringValue(), reader.annotations()); break }
-            case IonTypes.CLOB:      { writer.writeClob(reader.byteValue(), reader.annotations()); break }
-            case IonTypes.BLOB:      { writer.writeBlob(reader.byteValue(), reader.annotations()); break }
-            case IonTypes.LIST:      { writer.writeList(reader.annotations()); break }
-            case IonTypes.SEXP:      { writer.writeSexp(reader.annotations()); break }
-            case IonTypes.STRUCT:    { writer.writeStruct(reader.annotations()); break }
+            case IonTypes.BOOL:      { writer.writeBoolean(reader.booleanValue()); break }
+            case IonTypes.INT:       { writer.writeInt(reader.numberValue()); break }
+            case IonTypes.FLOAT:     { writer.writeFloat64(reader.numberValue()); break }
+            case IonTypes.DECIMAL:   { writer.writeDecimal(reader.decimalValue()); break }
+            case IonTypes.TIMESTAMP: { writer.writeTimestamp(reader.timestampValue()); break }
+            case IonTypes.SYMBOL:    { writer.writeSymbol(reader.stringValue()); break }
+            case IonTypes.STRING:    { writer.writeString(reader.stringValue()); break }
+            case IonTypes.CLOB:      { writer.writeClob(reader.byteValue()); break }
+            case IonTypes.BLOB:      { writer.writeBlob(reader.byteValue()); break }
+            case IonTypes.LIST:      { writer.stepIn(IonTypes.LIST); break }
+            case IonTypes.SEXP:      { writer.stepIn(IonTypes.SEXP); break }
+            case IonTypes.STRUCT:    { writer.stepIn(IonTypes.STRUCT); break }
             default: throw new Error('unrecognized type' + type);
         }
         if (type.container) {
@@ -111,7 +112,7 @@ export function writeTo(reader: IonReader, type: IonType, writer: IonWriter, dep
             for (let t; t = reader.next(); ) {
                 writeTo(reader, t, writer, depth + 1);
             }
-            writer.endContainer();
+            writer.stepOut();
             reader.stepOut();
         }
     }

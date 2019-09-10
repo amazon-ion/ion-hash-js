@@ -49,6 +49,10 @@ class ReaderComparer implements IonReader {
         assert.deepEqual(this.readerA.timestampValue(), this.readerB.timestampValue());
         return this.readerA.timestampValue();
     }
+    type(): IonType {
+        assert.deepEqual(this.readerA.type(), this.readerB.type());
+        return this.readerA.type();
+    }
     value(): any {
         assert.deepEqual(this.readerA.value(), this.readerB.value());
         return this.readerA.value();
