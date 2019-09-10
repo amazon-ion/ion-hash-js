@@ -203,7 +203,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     }
 
     writeValues(reader: IonReader): void {
-        // TBD
+        // TBD  https://github.com/amzn/ion-hash-js/issues/11
     }
 
     getBytes      (): Uint8Array { return this._writer.getBytes() }
