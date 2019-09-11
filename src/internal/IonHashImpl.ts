@@ -1,5 +1,5 @@
 import {Decimal, IonType, IonTypes, makeBinaryWriter,
-        Reader as IonReader, Timestamp, Writer as IonWriter} from 'ion-js';
+        Reader as IonReader, ReaderScalarValue, Timestamp, Writer as IonWriter} from 'ion-js';
 
 import {createHash, Hash} from 'crypto';
 
@@ -21,7 +21,7 @@ interface _IonValue {
     _fieldName(): string | null;
     _isNull(): boolean;
     _type(): IonType | null;
-    _value(): any;
+    _value(): ReaderScalarValue;
 }
 
 export class _HashReaderImpl implements IonHashReader, _IonValue {
@@ -34,22 +34,22 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     }
 
     // implements IonReader
-    annotations()   : string[]   { return this._reader.annotations() }
-    booleanValue()  : boolean    { return this._reader.booleanValue() }
-    byteValue()     : Uint8Array { return this._reader.byteValue() }
-    decimalValue()  : Decimal    { return this._reader.decimalValue() }
-    depth()         : number     { return this._reader.depth() }
-    fieldName()     : string     { return this._reader.fieldName() }
-    isNull()        : boolean    { return this._reader.isNull() }
-    numberValue()   : number     { return this._reader.numberValue() }
-    stringValue()   : string     { return this._reader.stringValue() }
-    timestampValue(): Timestamp  { return this._reader.timestampValue() }
-    type()          : IonType    { return this._reader.type() }
-    value()         : any        { return this._reader.value() }
+    annotations()   : string[]          { return this._reader.annotations() }
+    booleanValue()  : boolean | null    { return this._reader.booleanValue() }
+    byteValue()     : Uint8Array | null { return this._reader.byteValue() }
+    decimalValue()  : Decimal | null    { return this._reader.decimalValue() }
+    depth()         : number            { return this._reader.depth() }
+    fieldName()     : string | null     { return this._reader.fieldName() }
+    isNull()        : boolean           { return this._reader.isNull() }
+    numberValue()   : number | null     { return this._reader.numberValue() }
+    stringValue()   : string | null     { return this._reader.stringValue() }
+    timestampValue(): Timestamp | null  { return this._reader.timestampValue() }
+    type()          : IonType | null    { return this._reader.type() }
+    value()         : ReaderScalarValue { return this._reader.value() }
 
     private _traverse() {
         for (let type; type = this.next(); ) {
-            if (type.container && !this.isNull()) {
+            if (type.isContainer && !this.isNull()) {
                 this.stepIn();
                 this._traverse();
                 this.stepOut();
@@ -57,8 +57,8 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
         }
     }
 
-    next(): IonType {
-        if (this._ionType && this._ionType.container) {
+    next(): IonType | null {
+        if (this._ionType && this._ionType.isContainer) {
             if (this.isNull()) {
                 this._hasher._scalar(this);
             } else {
@@ -69,20 +69,20 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
             }
         }
 
-        if (this._ionType && this._ionType.scalar) {
+        if (this._ionType && this._ionType.isScalar) {
             this._hasher._scalar(this);
         }
         this._ionType = this._reader.next();
         return this._ionType;
     }
 
-    stepIn() {
+    stepIn(): void {
         this._hasher._stepIn(this);
         this._reader.stepIn();
         this._ionType = null;
     }
 
-    stepOut() {
+    stepOut(): void {
         this._traverse();        // fully consume the current container before stepping out
         this._reader.stepOut();
         this._hasher._stepOut();
@@ -96,7 +96,7 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     _fieldName(): string | null { return this.fieldName() }
     _isNull(): boolean          { return this.isNull() }
     _type(): IonType | null     { return this._ionType }
-    _value(): any               { return this.value() }
+    _value(): ReaderScalarValue { return this.value() }
 }
 
 export class _HashWriterImpl implements IonHashWriter, _IonValue {
@@ -106,7 +106,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     private __annotations: string[] = [];
     private __fieldName: string | null = null;
     private __isNull: boolean = false;
-    private __value: any;
+    private __value: ReaderScalarValue = null;
 
     constructor(private readonly _writer: IonWriter,
                 private readonly _hashFunctionProvider: IonHasherProvider) {
@@ -125,7 +125,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
 
     ///// scalars
 
-    private _hashScalar(type: IonType, value: any): void {
+    private _hashScalar(type: IonType, value: ReaderScalarValue): void {
         this.__ionType = type;
         this.__value = value;
         this.__isNull = (value == undefined || value == null);
@@ -202,6 +202,10 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
         this._writer.writeFieldName(fieldName);
     }
 
+    writeValue(reader: IonReader): void {
+        // TBD
+    }
+
     writeValues(reader: IonReader): void {
         // TBD  https://github.com/amzn/ion-hash-js/issues/11
     }
@@ -217,7 +221,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     _fieldName(): string | null { return this.__fieldName }
     _isNull(): boolean          { return this.__isNull }
     _type(): IonType | null     { return this.__ionType }
-    _value(): any               { return this.__value }
+    _value(): ReaderScalarValue { return this.__value }
 }
 
 class _Hasher {
@@ -342,9 +346,9 @@ class _Serializer {
         this._endMarker();
     }
 
-    private _getBytes(type: IonType, value: any, isNull: boolean): Uint8Array {
+    private _getBytes(type: IonType, value: ReaderScalarValue, isNull: boolean): Uint8Array {
         if (isNull) {
-            return Uint8Array.from([type.bid << 4 | 0x0F]);
+            return Uint8Array.from([type.binaryTypeId << 4 | 0x0F]);
         } else {
             let writer = makeBinaryWriter();
             _Serializer._serializers[type.name](value, writer);

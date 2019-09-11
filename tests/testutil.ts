@@ -69,7 +69,7 @@ export function sexpToBytes(reader: IonReader, options = { asIonBinary: false })
     }
     reader.stepIn();
     for (let type; type = reader.next(); ) {
-        bytes.push(reader.numberValue());
+        bytes.push(reader.numberValue()!!);
     }
     reader.stepOut();
     return Uint8Array.from(bytes);
@@ -84,8 +84,9 @@ export function toString(reader: IonReader, type: IonType): string {
 
 export function writeTo(reader: IonReader, type: IonType, writer: IonWriter, depth = 0): void {
     if (depth > 0) {
-        if (reader.fieldName() != undefined) {
-            writer.writeFieldName(reader.fieldName());
+        let fieldName = reader.fieldName();
+        if (fieldName !== null) {
+            writer.writeFieldName(fieldName);
         }
     }
     writer.setAnnotations(reader.annotations());
@@ -107,7 +108,7 @@ export function writeTo(reader: IonReader, type: IonType, writer: IonWriter, dep
             case IonTypes.STRUCT:    { writer.stepIn(IonTypes.STRUCT); break }
             default: throw new Error('unrecognized type' + type);
         }
-        if (type.container) {
+        if (type.isContainer) {
             reader.stepIn();
             for (let t; t = reader.next(); ) {
                 writeTo(reader, t, writer, depth + 1);

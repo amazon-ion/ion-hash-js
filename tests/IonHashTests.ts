@@ -32,7 +32,7 @@ let textReaderDigester: Digester = (ionData: string | Uint8Array, algorithm: str
 function readerDigester(reader: IonReader, algorithm: string, hasherLog: string[]): void {
     function traverse(reader: IonReader) {
         for (let type; type = reader.next(); ) {
-            if (type.container && !reader.isNull()) {
+            if (type.isContainer && !reader.isNull()) {
                 reader.stepIn();
                 traverse(reader);
                 reader.stepOut();
@@ -133,7 +133,9 @@ for (let type; type = reader.next(); ) {
     let expects: { [algorithm: string]: string } = {};
     for (let t; t = reader.next(); ) {
         let algorithm = reader.fieldName();
-        expects[algorithm] = toString(reader, t);
+        if (algorithm !== null) {
+            expects[algorithm] = toString(reader, t);
+        }
     }
     reader.stepOut();
 
