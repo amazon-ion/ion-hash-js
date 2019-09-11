@@ -146,6 +146,7 @@ function runTest(testString: string) {
     let hashWriter: IonHashWriter | null = null;
     try {
         let reader = makeReader(tv.inputValue);
+        reader.next();
         hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('identity'));
         hashWriter.writeValue(reader);
     } catch (e) {
