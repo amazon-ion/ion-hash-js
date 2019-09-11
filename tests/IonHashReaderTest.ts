@@ -58,7 +58,7 @@ class ReaderComparer implements IonReader {
         return this.readerA.value();
     }
 
-    next(): IonType {
+    next(): IonType | null {
         let ionTypeA = this.readerA.next();
         let ionTypeB = this.readerB.next();
         assert.deepEqual(ionTypeA, ionTypeB);

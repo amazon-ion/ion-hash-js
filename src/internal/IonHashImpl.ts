@@ -134,31 +134,31 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
         this.__annotations = [];
     }
 
-    writeBlob(value: Uint8Array): void {
+    writeBlob(value: Uint8Array | null): void {
         this._hashScalar(IonTypes.BLOB, value);
         this._writer.writeBlob(value);
     }
-    writeBoolean(value: boolean): void {
+    writeBoolean(value: boolean | null): void {
         this._hashScalar(IonTypes.BOOL, value);
         this._writer.writeBoolean(value);
     }
-    writeClob(value: Uint8Array): void {
+    writeClob(value: Uint8Array | null): void {
         this._hashScalar(IonTypes.CLOB, value);
         this._writer.writeClob(value);
     }
-    writeDecimal(value: Decimal): void {
+    writeDecimal(value: Decimal | null): void {
         this._hashScalar(IonTypes.DECIMAL, value);
         this._writer.writeDecimal(value);
     }
-    writeFloat32(value: number): void {
+    writeFloat32(value: number | null): void {
         this._hashScalar(IonTypes.FLOAT, value);
         this._writer.writeFloat32(value);
     }
-    writeFloat64(value: number): void {
+    writeFloat64(value: number | null): void {
         this._hashScalar(IonTypes.FLOAT, value);
         this._writer.writeFloat64(value);
     }
-    writeInt(value: number): void {
+    writeInt(value: number | null): void {
         this._hashScalar(IonTypes.INT, value);
         this._writer.writeInt(value);
     }
@@ -166,15 +166,15 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
         this._hashScalar(type, null);
         this._writer.writeNull(type);
     }
-    writeString(value: string): void {
+    writeString(value: string | null): void {
         this._hashScalar(IonTypes.STRING, value);
         this._writer.writeString(value);
     }
-    writeSymbol(value: string): void {
+    writeSymbol(value: string | null): void {
         this._hashScalar(IonTypes.SYMBOL, value);
         this._writer.writeSymbol(value);
     }
-    writeTimestamp(value: Timestamp): void {
+    writeTimestamp(value: Timestamp | null): void {
         this._hashScalar(IonTypes.TIMESTAMP, value);
         this._writer.writeTimestamp(value);
     }
@@ -203,11 +203,61 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     }
 
     writeValue(reader: IonReader): void {
-        // TBD
+        this._writeValue(reader);
+    }
+
+    private _writeValue(reader: IonReader, _depth = 0): void {
+        let type: IonType | null = reader.type();
+        if (type === null) {
+            return;
+        }
+        if (_depth > 0) {
+            let fieldName = reader.fieldName();
+            if (fieldName !== null) {
+                this.writeFieldName(fieldName);
+            }
+        }
+        this.setAnnotations(reader.annotations());
+        if (reader.isNull()) {
+            this.writeNull(type);
+        } else {
+            switch (type) {
+                case IonTypes.BOOL:      this.writeBoolean(reader.booleanValue()); break;
+                case IonTypes.INT:       this.writeInt(reader.numberValue()); break;
+                case IonTypes.FLOAT:     this.writeFloat64(reader.numberValue()); break;
+                case IonTypes.DECIMAL:   this.writeDecimal(reader.decimalValue()); break;
+                case IonTypes.TIMESTAMP: this.writeTimestamp(reader.timestampValue()); break;
+                case IonTypes.SYMBOL:    this.writeSymbol(reader.stringValue()); break;
+                case IonTypes.STRING:    this.writeString(reader.stringValue()); break;
+                case IonTypes.CLOB:      this.writeClob(reader.byteValue()); break;
+                case IonTypes.BLOB:      this.writeBlob(reader.byteValue()); break;
+                case IonTypes.LIST:      this.stepIn(IonTypes.LIST); break;
+                case IonTypes.SEXP:      this.stepIn(IonTypes.SEXP); break;
+                case IonTypes.STRUCT:    this.stepIn(IonTypes.STRUCT); break;
+                default: throw new Error('Unrecognized type ' + (type !== null ? type.name : type));
+            }
+            if (type.isContainer) {
+                reader.stepIn();
+                this._writeValues(reader, _depth + 1);
+                this.stepOut();
+                reader.stepOut();
+            }
+        }
     }
 
     writeValues(reader: IonReader): void {
-        // TBD  https://github.com/amzn/ion-hash-js/issues/11
+        this._writeValues(reader);
+    }
+
+    private _writeValues(reader: IonReader, _depth = 0): void {
+        let type: IonType | null = reader.type();
+        if (type === null) {
+            type = reader.next();
+        }
+        while (type !== null) {
+            this._writeValue(reader, _depth);
+            type = reader.next();
+        }
     }
 
     getBytes      (): Uint8Array { return this._writer.getBytes() }
@@ -493,7 +543,7 @@ const _END_MARKER = new Uint8Array([_END_MARKER_BYTE]);
 
 const _TQ: { [ionType: string]: number } = {};
 for (let ionType in IonTypes) {
-    _TQ[ionType.toLowerCase()] = (IonTypes as any)[ionType].bid << 4;
+    _TQ[ionType.toLowerCase()] = (IonTypes as any)[ionType].binaryTypeId << 4;
 }
 const _TQ_ANNOTATED_VALUE = new Uint8Array([0xE0]);
 
