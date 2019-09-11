@@ -1,5 +1,5 @@
 import {Decimal, IonType, IonTypes, makeBinaryWriter,
-        Reader as IonReader, Timestamp, TypeCodes, Writer as IonWriter} from 'ion-js';
+        Reader as IonReader, Timestamp, Writer as IonWriter} from 'ion-js';
 
 import {createHash, Hash} from 'crypto';
 
@@ -44,6 +44,7 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     numberValue()   : number     { return this._reader.numberValue() }
     stringValue()   : string     { return this._reader.stringValue() }
     timestampValue(): Timestamp  { return this._reader.timestampValue() }
+    type()          : IonType    { return this._reader.type() }
     value()         : any        { return this._reader.value() }
 
     private _traverse() {
@@ -112,120 +113,101 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
         this._hasher = new _Hasher(this._hashFunctionProvider);
     }
 
+    addAnnotation(annotation: string): void {
+        this._writer.addAnnotation(annotation);
+        this.__annotations.push(annotation);
+    }
+
+    setAnnotations(annotations: string[]): void {
+        this._writer.setAnnotations(annotations);
+        this.__annotations = annotations;
+    }
+
     ///// scalars
 
-    private _hashScalar(type: IonType, value: any, annotations?: string[]) {
+    private _hashScalar(type: IonType, value: any): void {
         this.__ionType = type;
         this.__value = value;
-        this.__annotations = annotations ? annotations : [];
         this.__isNull = (value == undefined || value == null);
         this._hasher._scalar(this);
         this.__fieldName = null;
+        this.__annotations = [];
     }
 
-    writeBlob(value: Uint8Array, annotations?: string[]) {
-        this._hashScalar(IonTypes.BLOB, value, annotations);
-        this._writer.writeBlob(value, annotations);
+    writeBlob(value: Uint8Array): void {
+        this._hashScalar(IonTypes.BLOB, value);
+        this._writer.writeBlob(value);
     }
-    writeBoolean(value: boolean, annotations?: string[]) {
-        this._hashScalar(IonTypes.BOOL, value, annotations);
-        this._writer.writeBoolean(value, annotations);
+    writeBoolean(value: boolean): void {
+        this._hashScalar(IonTypes.BOOL, value);
+        this._writer.writeBoolean(value);
     }
-    writeClob(value: Uint8Array, annotations?: string[]) {
-        this._hashScalar(IonTypes.CLOB, value, annotations);
-        this._writer.writeClob(value, annotations);
+    writeClob(value: Uint8Array): void {
+        this._hashScalar(IonTypes.CLOB, value);
+        this._writer.writeClob(value);
     }
-    writeDecimal(value: Decimal, annotations?: string[]) {
-        this._hashScalar(IonTypes.DECIMAL, value, annotations);
-        this._writer.writeDecimal(value, annotations);
+    writeDecimal(value: Decimal): void {
+        this._hashScalar(IonTypes.DECIMAL, value);
+        this._writer.writeDecimal(value);
     }
-    writeFloat32(value: number, annotations?: string[]) {
-        this._hashScalar(IonTypes.FLOAT, value, annotations);
-        this._writer.writeFloat32(value, annotations);
+    writeFloat32(value: number): void {
+        this._hashScalar(IonTypes.FLOAT, value);
+        this._writer.writeFloat32(value);
     }
-    writeFloat64(value: number, annotations?: string[]) {
-        this._hashScalar(IonTypes.FLOAT, value, annotations);
-        this._writer.writeFloat64(value, annotations);
+    writeFloat64(value: number): void {
+        this._hashScalar(IonTypes.FLOAT, value);
+        this._writer.writeFloat64(value);
     }
-    writeInt(value: number, annotations?: string[]) {
-        this._hashScalar(IonTypes.INT, value, annotations);
-        this._writer.writeInt(value, annotations);
+    writeInt(value: number): void {
+        this._hashScalar(IonTypes.INT, value);
+        this._writer.writeInt(value);
     }
-    writeNull(type: TypeCodes, annotations?: string[]) {
-        let ionType;
-        switch (type) {
-            case TypeCodes.NULL:         { ionType = IonTypes.NULL; break }
-            case TypeCodes.BOOL:         { ionType = IonTypes.BOOL; break }
-            case TypeCodes.POSITIVE_INT: { ionType = IonTypes.INT; break }
-            case TypeCodes.NEGATIVE_INT: { ionType = IonTypes.INT; break }
-            case TypeCodes.FLOAT:        { ionType = IonTypes.FLOAT; break }
-            case TypeCodes.DECIMAL:      { ionType = IonTypes.DECIMAL; break }
-            case TypeCodes.TIMESTAMP:    { ionType = IonTypes.TIMESTAMP; break }
-            case TypeCodes.SYMBOL:       { ionType = IonTypes.SYMBOL; break }
-            case TypeCodes.STRING:       { ionType = IonTypes.STRING; break }
-            case TypeCodes.CLOB:         { ionType = IonTypes.CLOB; break }
-            case TypeCodes.BLOB:         { ionType = IonTypes.BLOB; break }
-            case TypeCodes.LIST:         { ionType = IonTypes.LIST; break }
-            case TypeCodes.SEXP:         { ionType = IonTypes.SEXP; break }
-            case TypeCodes.STRUCT:       { ionType = IonTypes.STRUCT; break }
-            default: throw new Error('Unexpected type ' + type);
-        }
-        this._hashScalar(ionType, null, annotations);
-        this._writer.writeNull(type, annotations);
+    writeNull(type: IonType): void {
+        this._hashScalar(type, null);
+        this._writer.writeNull(type);
     }
-    writeString(value: string, annotations?: string[]) {
-        this._hashScalar(IonTypes.STRING, value, annotations);
-        this._writer.writeString(value, annotations);
+    writeString(value: string): void {
+        this._hashScalar(IonTypes.STRING, value);
+        this._writer.writeString(value);
     }
-    writeSymbol(value: string, annotations?: string[]) {
-        this._hashScalar(IonTypes.SYMBOL, value, annotations);
-        this._writer.writeSymbol(value, annotations);
+    writeSymbol(value: string): void {
+        this._hashScalar(IonTypes.SYMBOL, value);
+        this._writer.writeSymbol(value);
     }
-    writeTimestamp(value: Timestamp, annotations?: string[]) {
-        this._hashScalar(IonTypes.TIMESTAMP, value, annotations);
-        this._writer.writeTimestamp(value, annotations);
+    writeTimestamp(value: Timestamp): void {
+        this._hashScalar(IonTypes.TIMESTAMP, value);
+        this._writer.writeTimestamp(value);
     }
 
     ///// containers
 
-    private _hashContainer(type: IonType, annotations?: string[], isNull?: boolean) {
-        if (isNull) {
-            this._hashScalar(type, null, annotations);
-        } else {
-            this.__ionType = type;
-            this.__value = null;
-            this.__annotations = annotations ? annotations : [];
-            this.__isNull = false;
-            this._hasher._stepIn(this);
-            this.__fieldName = null;
-        }
+    stepIn(type: IonType): void {
+        this.__ionType = type;
+        this.__value = null;
+        this.__isNull = false;
+        this._hasher._stepIn(this);
+        this._writer.stepIn(type);
+        this.__fieldName = null;
+        this.__annotations = [];
     }
 
-    writeList(annotations?: string[], isNull?: boolean) {
-        this._hashContainer(IonTypes.LIST, annotations, isNull);
-        this._writer.writeList(annotations, isNull);
-    }
-    writeSexp(annotations?: string[], isNull?: boolean) {
-        this._hashContainer(IonTypes.SEXP, annotations, isNull);
-        this._writer.writeSexp(annotations, isNull);
-    }
-    writeStruct(annotations?: string[], isNull?: boolean) {
-        this._hashContainer(IonTypes.STRUCT, annotations, isNull);
-        this._writer.writeStruct(annotations, isNull);
-    }
-    endContainer() {
+    stepOut(): void {
         this._hasher._stepOut();
-        this._writer.endContainer();
+        this._writer.stepOut();
     }
 
 
-    writeFieldName(fieldName: string) {
+    writeFieldName(fieldName: string): void {
         this.__fieldName = fieldName;
         this._writer.writeFieldName(fieldName);
     }
 
+    writeValues(reader: IonReader): void {
+        // TBD  https://github.com/amzn/ion-hash-js/issues/11
+    }
+
     getBytes      (): Uint8Array { return this._writer.getBytes() }
-    close         ()             { }
+    close         (): void       { }
 
     // implements IonHashWriter
     digest(): Uint8Array { return this._hasher._digest() }
@@ -296,7 +278,7 @@ class _Hasher {
 
 class _Serializer {
     private static readonly _serializers: { [typeName: string]: (value: any, writer: IonWriter) => void } = {
-        "null":      (value: any, writer: IonWriter) => { writer.writeNull(TypeCodes.NULL) },
+        "null":      (value: any, writer: IonWriter) => { writer.writeNull(IonTypes.NULL) },
         "bool":      (value: any, writer: IonWriter) => { writer.writeBoolean(value) },
         "int":       (value: any, writer: IonWriter) => { writer.writeInt(value) },
         "float":     (value: any, writer: IonWriter) => { writer.writeFloat64(value) },
