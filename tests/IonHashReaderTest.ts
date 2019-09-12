@@ -1,7 +1,7 @@
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 
-import {Decimal, IonType, IonTypes, makeReader, Reader as IonReader, Timestamp} from 'ion-js';
+import {Decimal, IonType, IonTypes, makeReader, Reader as IonReader, ReaderScalarValue, Timestamp} from 'ion-js';
 
 import {IonHashReader, makeHashReader} from '../src/IonHash';
 import {sexpToBytes, testIonHasherProvider} from './testutil';
@@ -13,15 +13,15 @@ class ReaderComparer implements IonReader {
         assert.deepEqual(this.readerA.annotations(), this.readerB.annotations());
         return this.readerA.annotations();
     }
-    booleanValue(): boolean {
+    booleanValue(): boolean | null {
         assert.deepEqual(this.readerA.booleanValue(), this.readerB.booleanValue());
         return this.readerA.booleanValue();
     }
-    byteValue(): Uint8Array {
+    byteValue(): Uint8Array | null {
         assert.deepEqual(this.readerA.byteValue(), this.readerB.byteValue());
         return this.readerA.byteValue()
     }
-    decimalValue(): Decimal {
+    decimalValue(): Decimal | null {
         assert.deepEqual(this.readerA.decimalValue(), this.readerB.decimalValue());
         return this.readerA.decimalValue();
     }
@@ -29,7 +29,7 @@ class ReaderComparer implements IonReader {
         assert.deepEqual(this.readerA.depth(), this.readerB.depth());
         return this.readerA.depth()
     }
-    fieldName(): string    {
+    fieldName(): string | null {
         assert.deepEqual(this.readerA.fieldName(), this.readerB.fieldName());
         return this.readerA.fieldName();
     }
@@ -37,28 +37,28 @@ class ReaderComparer implements IonReader {
         assert.deepEqual(this.readerA.isNull(), this.readerB.isNull());
         return this.readerA.isNull();
     }
-    numberValue(): number {
+    numberValue(): number | null {
         assert.deepEqual(this.readerA.numberValue(), this.readerB.numberValue());
         return this.readerA.numberValue();
     }
-    stringValue(): string {
+    stringValue(): string | null {
         assert.deepEqual(this.readerA.stringValue(), this.readerB.stringValue());
         return this.readerA.stringValue();
     }
-    timestampValue(): Timestamp {
+    timestampValue(): Timestamp | null {
         assert.deepEqual(this.readerA.timestampValue(), this.readerB.timestampValue());
         return this.readerA.timestampValue();
     }
-    type(): IonType {
+    type(): IonType | null {
         assert.deepEqual(this.readerA.type(), this.readerB.type());
         return this.readerA.type();
     }
-    value(): any {
+    value(): ReaderScalarValue | null {
         assert.deepEqual(this.readerA.value(), this.readerB.value());
         return this.readerA.value();
     }
 
-    next(): IonType {
+    next(): IonType | null {
         let ionTypeA = this.readerA.next();
         let ionTypeB = this.readerB.next();
         assert.deepEqual(ionTypeA, ionTypeB);
@@ -91,7 +91,7 @@ function traverse(reader: IonReader) {
             case IonTypes.BLOB:      { reader.byteValue(); break }
         }
         reader.isNull();
-        if (!type.container) {
+        if (!type.isContainer) {
             reader.value();
         } else {
             if (!reader.isNull()) {

@@ -5,7 +5,7 @@ const {assert} = intern.getPlugin('chai');
 import {readFileSync} from 'fs';
 
 import {IonHashReader, IonHashWriter, makeHashReader, makeHashWriter} from '../src/IonHash';
-import {testIonHasherProvider, toHexString, writeln, writeTo} from './testutil';
+import {testIonHasherProvider, toHexString, writeln} from './testutil';
 
 class TestValue {
     private static ionPrefix = 'ion::';
@@ -146,9 +146,9 @@ function runTest(testString: string) {
     let hashWriter: IonHashWriter | null = null;
     try {
         let reader = makeReader(tv.inputValue);
-        let type = reader.next();
+        reader.next();
         hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('identity'));
-        writeTo(reader, type, hashWriter);
+        hashWriter.writeValue(reader);
     } catch (e) {
         if (tv.validIon) {
             throw e;

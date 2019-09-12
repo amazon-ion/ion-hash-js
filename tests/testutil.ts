@@ -69,53 +69,17 @@ export function sexpToBytes(reader: IonReader, options = { asIonBinary: false })
     }
     reader.stepIn();
     for (let type; type = reader.next(); ) {
-        bytes.push(reader.numberValue());
+        bytes.push(reader.numberValue()!!);
     }
     reader.stepOut();
     return Uint8Array.from(bytes);
 }
 
 
-export function toString(reader: IonReader, type: IonType): string {
+export function readerToString(reader: IonReader): string {
     let writer = makeTextWriter();
-    writeTo(reader, type, writer);
+    writer.writeValue(reader);
     return String.fromCharCode.apply(null, writer.getBytes());
-}
-
-export function writeTo(reader: IonReader, type: IonType, writer: IonWriter, depth = 0): void {
-    if (depth > 0) {
-        if (reader.fieldName() != undefined) {
-            writer.writeFieldName(reader.fieldName());
-        }
-    }
-    writer.setAnnotations(reader.annotations());
-    if (reader.isNull()) {
-        writer.writeNull(type);
-    } else {
-        switch (type) {
-            case IonTypes.BOOL:      { writer.writeBoolean(reader.booleanValue()); break }
-            case IonTypes.INT:       { writer.writeInt(reader.numberValue()); break }
-            case IonTypes.FLOAT:     { writer.writeFloat64(reader.numberValue()); break }
-            case IonTypes.DECIMAL:   { writer.writeDecimal(reader.decimalValue()); break }
-            case IonTypes.TIMESTAMP: { writer.writeTimestamp(reader.timestampValue()); break }
-            case IonTypes.SYMBOL:    { writer.writeSymbol(reader.stringValue()); break }
-            case IonTypes.STRING:    { writer.writeString(reader.stringValue()); break }
-            case IonTypes.CLOB:      { writer.writeClob(reader.byteValue()); break }
-            case IonTypes.BLOB:      { writer.writeBlob(reader.byteValue()); break }
-            case IonTypes.LIST:      { writer.stepIn(IonTypes.LIST); break }
-            case IonTypes.SEXP:      { writer.stepIn(IonTypes.SEXP); break }
-            case IonTypes.STRUCT:    { writer.stepIn(IonTypes.STRUCT); break }
-            default: throw new Error('unrecognized type' + type);
-        }
-        if (type.container) {
-            reader.stepIn();
-            for (let t; t = reader.next(); ) {
-                writeTo(reader, t, writer, depth + 1);
-            }
-            writer.stepOut();
-            reader.stepOut();
-        }
-    }
 }
 
 export function toHexString(byteArray: Uint8Array): string {

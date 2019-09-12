@@ -6,7 +6,7 @@ import {readFileSync} from 'fs';
 
 import {makeBinaryWriter, makeReader, makeTextWriter, Reader as IonReader, Writer as IonWriter} from 'ion-js';
 import {makeHashReader, makeHashWriter} from '../src/IonHash';
-import {sexpToBytes, testIonHasherProvider, toHexString, toString, writeln, writeTo} from './testutil';
+import {sexpToBytes, testIonHasherProvider, toHexString, readerToString, writeln} from './testutil';
 
 // builds a test suite based on the contents of ion_hash_tests.ion
 
@@ -18,8 +18,8 @@ interface Digester {
 let binaryReaderDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
     let reader = makeReader(ionData);
     let writer = makeBinaryWriter();
-    let type = reader.next();
-    writeTo(reader, type, writer);
+    reader.next();
+    writer.writeValue(reader);
     writer.close();
     let ionBinary = writer.getBytes();
     readerDigester(makeReader(ionBinary), algorithm, hasherLog);
@@ -32,7 +32,7 @@ let textReaderDigester: Digester = (ionData: string | Uint8Array, algorithm: str
 function readerDigester(reader: IonReader, algorithm: string, hasherLog: string[]): void {
     function traverse(reader: IonReader) {
         for (let type; type = reader.next(); ) {
-            if (type.container && !reader.isNull()) {
+            if (type.isContainer && !reader.isNull()) {
                 reader.stepIn();
                 traverse(reader);
                 reader.stepOut();
@@ -63,9 +63,9 @@ let textWriterDigester: Digester = (ionData: string | Uint8Array, algorithm: str
 
 function writerDigester(writer: IonWriter, ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
     let reader = makeReader(ionData);
-    let type = reader.next();
+    reader.next();
     let hashWriter = makeHashWriter(writer, testIonHasherProvider(algorithm, hasherLog));
-    writeTo(reader, type, hashWriter);
+    hashWriter.writeValue(reader);
     hashWriter.digest();
 }
 
@@ -117,11 +117,11 @@ for (let type; type = reader.next(); ) {
 
     let ionData: string | Uint8Array;
     reader.stepIn();
-    type = reader.next();   // ion or 10n
+    reader.next();   // ion or 10n
     if (reader.fieldName() == '10n') {
         ionData = sexpToBytes(reader, { asIonBinary: true });
     } else {
-        ionData = toString(reader, type);
+        ionData = readerToString(reader);
         if (!testName) {
             testName = ionData;
         }
@@ -133,7 +133,9 @@ for (let type; type = reader.next(); ) {
     let expects: { [algorithm: string]: string } = {};
     for (let t; t = reader.next(); ) {
         let algorithm = reader.fieldName();
-        expects[algorithm] = toString(reader, t);
+        if (algorithm !== null) {
+            expects[algorithm] = readerToString(reader);
+        }
     }
     reader.stepOut();
 

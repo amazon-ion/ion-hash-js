@@ -4,7 +4,7 @@ const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 
 import {makeHashReader, makeHashWriter} from '../src/IonHash';
-import {sexpStringToBytes, testIonHasherProvider, writeTo} from './testutil';
+import {sexpStringToBytes, testIonHasherProvider} from './testutil';
 
 registerSuite('FieldnameBehavior', {
     null:       () => { test("null", "(0x0b 0x0f 0x0e)") },
@@ -41,8 +41,8 @@ function test(ionStr: string, expectedSexpBytes: string) {
     hashWriter.writeFieldName("field_name");    // this fieldName should not become part of the hash
 
     let reader = makeReader(ionStr);
-    let type = reader.next();
-    writeTo(reader, type, hashWriter);
+    reader.next();
+    hashWriter.writeValue(reader);
 
     let writerActualDigest = hashWriter.digest();
 
