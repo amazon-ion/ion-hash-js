@@ -70,7 +70,7 @@ function writerDigester(writer: IonWriter, ionData: string | Uint8Array, algorit
 }
 
 let digesters: { [digesterName: string]: Digester } = {
-    // BinaryReader: binaryReaderDigester,  // https://github.com/amzn/ion-hash-js/issues/3
+    BinaryReader: binaryReaderDigester,
     BinaryWriter: binaryWriterDigester,
     ReaderSkip: readerSkipDigester,
     TextReader: textReaderDigester,
