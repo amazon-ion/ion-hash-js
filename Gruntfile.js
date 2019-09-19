@@ -26,7 +26,6 @@ module.exports = function(grunt) {
           reporters: ['runner'],
           suites: [
             'dist/commonjs/es5/**/*.js',
-            '!dist/commonjs/es5/**/BigListOfNaughtyStringsTests.js',  // https://github.com/amzn/ion-hash-js/issues/6
           ],
         },
       },

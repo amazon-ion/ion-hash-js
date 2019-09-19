@@ -29,22 +29,22 @@ class TestValue {
 
     symbol() {
         let s = this.inputValue;
-        s = s.replace("\\", "\\\\");
-        s = s.replace("'", "\\'");
+        s = s.replace(/\\/g, '\\\\');
+        s = s.replace(/'/g, "\\'");
         return "\'" + s + "\'";
     }
 
     string() {
         let s = this.inputValue;
-        s = s.replace("\\", "\\\\");
-        s = s.replace("\"", "\\\"");
+        s = s.replace(/\\/g, '\\\\');
+        s = s.replace(/"/g, '\\\"');
         return "\"" + s + "\"";
     }
 
     long_string() {
         let s = this.inputValue;
-        s = s.replace("\\", "\\\\");
-        s = s.replace("'", "\\'");
+        s = s.replace(/\\/g, '\\\\');
+        s = s.replace(/'/g, "\\'");
         return "'''" + s + "'''";
     }
 
@@ -130,9 +130,7 @@ readFileSync('tests/big-list-of-naughty-strings.txt', 'utf-8')
 let suite: { [testName: string]: () => void } = { };
 let testCount = 0;
 strings.forEach(str => {
-    suite[str] = () => {
-        runTest(str);
-    };
+    suite[str] = () => runTest(str);
     testCount++;
 });
 writeln("testCount: " + testCount);
@@ -143,19 +141,20 @@ registerSuite('BigListOfNaughtyStringsTests', suite);
 
 function runTest(testString: string) {
     let tv = new TestValue(testString);
-    let hashWriter: IonHashWriter | null = null;
+    let hashWriter: IonHashWriter;
     try {
         let reader = makeReader(tv.inputValue);
-        reader.next();
         hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('identity'));
+        reader.next();
         hashWriter.writeValue(reader);
     } catch (e) {
+        writeln(e);
         if (tv.validIon) {
             throw e;
         }
     }
 
-    let hashReader: IonHashReader | null = null;
+    let hashReader: IonHashReader;
     try {
         let reader = makeReader(tv.inputValue);
         hashReader = makeHashReader(reader, testIonHasherProvider('identity'));
