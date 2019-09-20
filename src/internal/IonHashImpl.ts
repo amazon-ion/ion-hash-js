@@ -6,13 +6,19 @@ import {createHash, Hash} from 'crypto';
 import {IonHasher, IonHasherProvider, IonHashReader, IonHashWriter} from "../IonHash";
 
 export class _CryptoIonHasher implements IonHasher {
-    private readonly _hash: Hash;
+    private _hash: Hash;
 
-    constructor(algorithm: string) {
+    constructor(private readonly algorithm: string) {
         this._hash = createHash(algorithm);
     }
-    update(bytes: Uint8Array): void { this._hash.update(bytes) }
-    digest(): Uint8Array { return this._hash.digest() }
+    update(bytes: Uint8Array): void {
+        this._hash.update(bytes);
+    }
+    digest(): Uint8Array {
+        let digest = this._hash.digest();
+        this._hash = createHash(this.algorithm);
+        return digest;
+    }
 }
 
 
@@ -478,8 +484,8 @@ class _Serializer {
 }
 
 class _StructSerializer extends _Serializer {
-    _scalarSerializer: _Serializer;
-    _fieldHashes: Uint8Array[] = [];
+    private readonly _scalarSerializer: _Serializer;
+    private readonly _fieldHashes: Uint8Array[] = [];
 
     constructor(hashFunction: IonHasher,
                 depth: number,
