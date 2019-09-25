@@ -99,7 +99,6 @@ function test(ionData: string | Uint8Array,
     }
 }
 
-//let suites: { [digesterName: string]: [testName: string]: () => void } = { };
 let suites: { [digesterName: string]: Tests } = { };
 for (const digester in digesters) {
     suites[digester] = { };
