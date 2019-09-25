@@ -7,17 +7,13 @@ import {cryptoIonHasherProvider, makeHashReader, makeHashWriter} from '../src/Io
 import {toHexString} from './testutil';
 
 registerSuite('CryptoIonHasherProviderTests', {
-    cryptoMD5reader: () => {
-        let str = '[1, 2, {a: 3, b: (4 {c: 5} 6) }, 7]';
-        let expectedDigest = 'dd 20 84 69 9a 2e 85 fe ef 64 c8 79 57 b6 9f cd';
+    cryptoMD5reader: () => testReader(
+        '[1, 2, {a: 3, b: (4 {c: 5} 6) }, 7]',
+        'dd 20 84 69 9a 2e 85 fe ef 64 c8 79 57 b6 9f cd'),
 
-        let hashReader = makeHashReader(makeReader(str), cryptoIonHasherProvider('md5'));
-        hashReader.next();
-        hashReader.next();
-        let actualDigest = hashReader.digest();
-
-        assert.equal(toHexString(actualDigest), expectedDigest);
-    },
+    cryptoMD5readerStructWithMultipleScalarFields: () => testReader(
+        '{a: 1, b: 2}',
+        '52 30 a3 c4 0d a0 d5 95 28 bb e5 01 90 f4 0c 23'),
 
     cryptoMD5writer: () => {
         let expectedIon = '[1,2,{a:3,b:(4 {c:5} 6)},7]';
@@ -57,4 +53,13 @@ registerSuite('CryptoIonHasherProviderTests', {
         });
     },
 });
+
+function testReader(input: string, expectedDigest: string) {
+    let hashReader = makeHashReader(makeReader(input), cryptoIonHasherProvider('md5'));
+    hashReader.next();
+    hashReader.next();
+    let actualDigest = hashReader.digest();
+
+    assert.equal(toHexString(actualDigest), expectedDigest);
+}
 
