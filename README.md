@@ -74,3 +74,7 @@ This library is designed to work with Node 8/ES5/CommonJS.
 
     ```digest:  8f 3b f4 b1 93 5c f4 69 c9 c1 0c 31 52 4b 26 25```
 
+## Known Issues
+
+Any tests commented out in [tests/ion_hash_tests.ion](https://github.com/amzn/ion-hash-js/blob/master/tests/ion_hash_tests.ion)
+are not expected to work at this time using the tip of the master branch.
