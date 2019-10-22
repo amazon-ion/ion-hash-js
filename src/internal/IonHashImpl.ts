@@ -1,9 +1,10 @@
-import {Decimal, IonType, IonTypes, makeBinaryWriter,
+import {Decimal, IntSize, IonType, IonTypes, makeBinaryWriter,
         Reader as IonReader, ReaderScalarValue, Timestamp, Writer as IonWriter} from 'ion-js';
 
 import {createHash, Hash} from 'crypto';
 
 import {IonHasher, IonHasherProvider, IonHashReader, IonHashWriter} from "../IonHash";
+import JSBI from "jsbi";
 
 export class _CryptoIonHasher implements IonHasher {
     private _hash: Hash;
@@ -41,11 +42,13 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
 
     // implements IonReader
     annotations()   : string[]          { return this._reader.annotations() }
+    bigIntValue()   : JSBI | null       { return this._reader.bigIntValue() }
     booleanValue()  : boolean | null    { return this._reader.booleanValue() }
     byteValue()     : Uint8Array | null { return this._reader.byteValue() }
     decimalValue()  : Decimal | null    { return this._reader.decimalValue() }
     depth()         : number            { return this._reader.depth() }
     fieldName()     : string | null     { return this._reader.fieldName() }
+    intSize()       : IntSize           { return this._reader.intSize() }
     isNull()        : boolean           { return this._reader.isNull() }
     numberValue()   : number | null     { return this._reader.numberValue() }
     stringValue()   : string | null     { return this._reader.stringValue() }
@@ -164,7 +167,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
         this._hashScalar(IonTypes.FLOAT, value);
         this._writer.writeFloat64(value);
     }
-    writeInt(value: number | null): void {
+    writeInt(value: number | JSBI | null): void {
         this._hashScalar(IonTypes.INT, value);
         this._writer.writeInt(value);
     }
@@ -229,7 +232,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
         } else {
             switch (type) {
                 case IonTypes.BOOL:      this.writeBoolean(reader.booleanValue()); break;
-                case IonTypes.INT:       this.writeInt(reader.numberValue()); break;
+                case IonTypes.INT:       this.writeInt(reader.bigIntValue()); break;
                 case IonTypes.FLOAT:     this.writeFloat64(reader.numberValue()); break;
                 case IonTypes.DECIMAL:   this.writeDecimal(reader.decimalValue()); break;
                 case IonTypes.TIMESTAMP: this.writeTimestamp(reader.timestampValue()); break;
@@ -268,6 +271,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
 
     getBytes      (): Uint8Array { return this._writer.getBytes() }
     close         (): void       { }
+    depth         (): number     { return this._writer.depth() }
 
     // implements IonHashWriter
     digest(): Uint8Array { return this._hasher._digest() }
