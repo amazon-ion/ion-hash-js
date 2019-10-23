@@ -1,7 +1,18 @@
+import JSBI from "jsbi";
+
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 
-import {Decimal, IonType, IonTypes, makeReader, Reader as IonReader, ReaderScalarValue, Timestamp} from 'ion-js';
+import {
+    Decimal,
+    IntSize,
+    IonType,
+    IonTypes,
+    makeReader,
+    Reader as IonReader,
+    ReaderScalarValue,
+    Timestamp
+} from 'ion-js';
 
 import {IonHashReader, makeHashReader} from '../src/IonHash';
 import {sexpToBytes, testIonHasherProvider} from './testutil';
@@ -12,6 +23,10 @@ class ReaderComparer implements IonReader {
     annotations(): string[] {
         assert.deepEqual(this.readerA.annotations(), this.readerB.annotations());
         return this.readerA.annotations();
+    }
+    bigIntValue(): JSBI | null {
+        assert.deepEqual(this.readerA.bigIntValue(), this.readerB.bigIntValue());
+        return this.readerA.bigIntValue();
     }
     booleanValue(): boolean | null {
         assert.deepEqual(this.readerA.booleanValue(), this.readerB.booleanValue());
@@ -32,6 +47,10 @@ class ReaderComparer implements IonReader {
     fieldName(): string | null {
         assert.deepEqual(this.readerA.fieldName(), this.readerB.fieldName());
         return this.readerA.fieldName();
+    }
+    intSize(): IntSize {
+        assert.deepEqual(this.readerA.intSize(), this.readerB.intSize());
+        return this.readerA.intSize();
     }
     isNull(): boolean {
         assert.deepEqual(this.readerA.isNull(), this.readerB.isNull());

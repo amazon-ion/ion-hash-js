@@ -79,6 +79,7 @@ export function sexpToBytes(reader: IonReader, options = { asIonBinary: false })
 export function readerToString(reader: IonReader): string {
     let writer = makeTextWriter();
     writer.writeValue(reader);
+    writer.close();
     return String.fromCharCode.apply(null, writer.getBytes());
 }
 

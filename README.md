@@ -37,8 +37,8 @@ This library is designed to work with Node 8/ES5/CommonJS.
     let digest = hashReader.digest();
     
     process.stdout.write('digest:  ');
-    digest.forEach(b => {
-        process.stdout.write(('0' + ((b as number) & 0xFF).toString(16)).slice(-2) + ' ');
+    digest.forEach((b: number) => {
+        process.stdout.write(('0' + (b & 0xFF).toString(16)).slice(-2) + ' ');
     });
     process.stdout.write('\n');
     ```
@@ -50,22 +50,22 @@ This library is designed to work with Node 8/ES5/CommonJS.
 1. Use the library to write Ion data:
     ```javascript
     import * as ion from 'ion-js';
+    import {IonTypes} from 'ion-js';
     import {cryptoIonHasherProvider, makeHashWriter} from 'ion-hash-js';
-    
+
     let hashWriter = makeHashWriter(
             ion.makeTextWriter(),
             cryptoIonHasherProvider('md5'));
-    hashWriter.writeList();
+    hashWriter.stepIn(IonTypes.LIST);
     hashWriter.writeInt(1);
     hashWriter.writeInt(2);
     hashWriter.writeInt(3);
-    hashWriter.endContainer();
+    hashWriter.stepOut();
     let digest = hashWriter.digest();
-    
+
     process.stdout.write('digest:  ');
-    digest.forEach(b => {
-        process.stdout.write(('0' + ((b as number) & 0xFF)
-                .toString(16)).slice(-2) + ' ');
+    digest.forEach((b: number) => {
+        process.stdout.write(('0' + (b & 0xFF).toString(16)).slice(-2) + ' ');
     });
     process.stdout.write('\n');
     ```
