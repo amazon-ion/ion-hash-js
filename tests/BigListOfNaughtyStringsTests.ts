@@ -83,9 +83,9 @@ class TestValue {
     }
 }
 
-// build the suite based on the contents of big-list-of-naughty-strings.txt
+// build the suite based on the contents of big_list_of_naughty_strings.txt
 let suite: { [testName: string]: () => void } = { };
-readFileSync('tests/big-list-of-naughty-strings.txt', 'utf-8')
+readFileSync('ion-hash-test/big_list_of_naughty_strings.txt', 'utf-8')
     .split(/\r?\n/)
     .filter(line => !(line == '' || line[0] == '#'))
     .forEach(line => {
