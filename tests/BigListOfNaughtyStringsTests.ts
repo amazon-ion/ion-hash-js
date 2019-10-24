@@ -28,7 +28,7 @@ class TestValue {
 
     readonly validIon: boolean | null;
 
-    constructor(public inputValue: string) {
+    constructor(public readonly inputValue: string) {
         this.validIon = null;
 
         if (this.inputValue.startsWith(TestValue.ionPrefix)) {
@@ -83,14 +83,15 @@ class TestValue {
     }
 }
 
-// build the suite based on the contents of big-list-of-naughty-strings.txt
-let strings: string[] = [];
-readFileSync('tests/big-list-of-naughty-strings.txt', 'utf-8')
+// build the suite based on the contents of big_list_of_naughty_strings.txt
+let suite: { [testName: string]: () => void } = { };
+readFileSync('ion-hash-test/big_list_of_naughty_strings.txt', 'utf-8')
     .split(/\r?\n/)
     .filter(line => !(line == '' || line[0] == '#'))
     .forEach(line => {
         let tv = new TestValue(line);
 
+        let strings: string[] = [];
         strings.push(tv.symbol());
         strings.push(tv.string());
         strings.push(tv.long_string());
@@ -140,26 +141,21 @@ readFileSync('tests/big-list-of-naughty-strings.txt', 'utf-8')
 
         // multiple annotations
         strings.push(tv.symbol() + "::" + tv.symbol() + "::" + tv.symbol() + "::" + tv.string());
-    });
 
-let suite: { [testName: string]: () => void } = { };
-let testCount = 0;
-strings.forEach(str => {
-    suite[str] = () => runTest(str);
-    testCount++;
-});
-writeln("testCount: " + testCount);
+        strings.forEach(str => {
+            suite[str] = () => runTest(tv, str);
+        });
+    });
 
 // ask intern to execute the tests
 registerSuite('BigListOfNaughtyStringsTests', suite);
 
 
-function runTest(testString: string) {
-    let tv = new TestValue(testString);
+function runTest(tv: TestValue, testString: string) {
     let hashWriter: IonHashWriter;
     try {
-        let reader = makeReader(tv.inputValue);
-        hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('identity'));
+        let reader = makeReader(testString);
+        hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('md5'));
         reader.next();
         hashWriter.writeValue(reader);
     } catch (e) {
@@ -171,8 +167,8 @@ function runTest(testString: string) {
 
     let hashReader: IonHashReader;
     try {
-        let reader = makeReader(tv.inputValue);
-        hashReader = makeHashReader(reader, testIonHasherProvider('identity'));
+        let reader = makeReader(testString);
+        hashReader = makeHashReader(reader, testIonHasherProvider('md5'));
         hashReader.next();
         hashReader.next();
     } catch (e) {
