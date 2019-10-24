@@ -74,6 +74,28 @@ This library is designed to work with Node 8/ES5/CommonJS.
 
     ```digest:  8f 3b f4 b1 93 5c f4 69 c9 c1 0c 31 52 4b 26 25```
 
+
+## Development
+
+This repository contains a [git submodule](https://git-scm.com/docs/git-submodule)
+called `ion-hash-test`, which holds test data used by `ion-hash-js`'s unit tests.
+
+The easiest way to clone the `ion-hash-js` repository and initialize its `ion-hash-test`
+submodule is to run the following command:
+
+```
+$ git clone --recursive https://github.com/amzn/ion-hash-js.git ion-hash-js
+```
+
+Alternatively, the submodule may be initialized independently from the clone
+by running the following commands:
+
+```
+$ git submodule init
+$ git submodule update
+```
+
+
 ## Known Issues
 
 Any tests commented out in [tests/ion_hash_tests.ion](https://github.com/amzn/ion-hash-js/blob/master/tests/ion_hash_tests.ion)
