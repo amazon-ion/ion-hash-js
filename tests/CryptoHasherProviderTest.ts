@@ -18,10 +18,10 @@ import {IonTypes, makeReader, makeTextWriter} from 'ion-js';
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 
-import {cryptoIonHasherProvider, makeHashReader, makeHashWriter} from '../src/IonHash';
+import {cryptoHasherProvider, makeHashReader, makeHashWriter} from '../src/IonHash';
 import {toHexString} from './testutil';
 
-registerSuite('CryptoIonHasherProviderTests', {
+registerSuite('CryptoHasherProviderTests', {
     cryptoMD5reader: () => testReader(
         '[1, 2, {a: 3, b: (4 {c: 5} 6) }, 7]',
         'dd 20 84 69 9a 2e 85 fe ef 64 c8 79 57 b6 9f cd'),
@@ -35,7 +35,7 @@ registerSuite('CryptoIonHasherProviderTests', {
         let expectedDigest = 'dd 20 84 69 9a 2e 85 fe ef 64 c8 79 57 b6 9f cd';
 
         let writer = makeTextWriter();
-        let hashWriter = makeHashWriter(writer, cryptoIonHasherProvider('md5'));
+        let hashWriter = makeHashWriter(writer, cryptoHasherProvider('md5'));
 
         hashWriter.stepIn(IonTypes.LIST);
           hashWriter.writeInt(1);
@@ -64,13 +64,13 @@ registerSuite('CryptoIonHasherProviderTests', {
 
     unknownAlgorithm: () => {
         assert.throws(() => {
-            makeHashWriter(makeTextWriter(), cryptoIonHasherProvider('unknownAlgorithm'))
+            makeHashWriter(makeTextWriter(), cryptoHasherProvider('unknownAlgorithm'))
         });
     },
 });
 
 function testReader(input: string, expectedDigest: string) {
-    let hashReader = makeHashReader(makeReader(input), cryptoIonHasherProvider('md5'));
+    let hashReader = makeHashReader(makeReader(input), cryptoHasherProvider('md5'));
     hashReader.next();
     hashReader.next();
     let actualDigest = hashReader.digest();

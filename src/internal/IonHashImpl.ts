@@ -14,14 +14,14 @@
  */
 
 import {Decimal, IntSize, IonType, IonTypes, makeBinaryWriter,
-        Reader as IonReader, ReaderScalarValue, Timestamp, Writer as IonWriter} from 'ion-js';
+        Reader, ReaderScalarValue, Timestamp, Writer} from 'ion-js';
 
 import {createHash, Hash} from 'crypto';
 
-import {IonHasher, IonHasherProvider, IonHashReader, IonHashWriter} from "../IonHash";
+import {Hasher, HasherProvider, HashReader, HashWriter} from "../IonHash";
 import JSBI from "jsbi";
 
-export class _CryptoIonHasher implements IonHasher {
+export class _CryptoHasher implements Hasher {
     private _hash: Hash;
 
     constructor(private readonly algorithm: string) {
@@ -46,16 +46,16 @@ interface _IonValue {
     _value(): ReaderScalarValue;
 }
 
-export class _HashReaderImpl implements IonHashReader, _IonValue {
+export class _HashReaderImpl implements HashReader, _IonValue {
     private readonly _hasher: _Hasher;
     private _ionType: IonType | null = null;
 
-    constructor(private readonly _reader: IonReader,
-                private readonly _hashFunctionProvider: IonHasherProvider) {
+    constructor(private readonly _reader: Reader,
+                private readonly _hashFunctionProvider: HasherProvider) {
         this._hasher = new _Hasher(this._hashFunctionProvider);
     }
 
-    // implements IonReader
+    // implements Reader
     annotations()   : string[]          { return this._reader.annotations() }
     bigIntValue()   : JSBI | null       { return this._reader.bigIntValue() }
     booleanValue()  : boolean | null    { return this._reader.booleanValue() }
@@ -112,7 +112,7 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
         this._hasher._stepOut();
     }
 
-    // implements IonHashReader
+    // implements HashReader
     digest(): Uint8Array { return this._hasher._digest() }
 
     // implements _IonValue
@@ -123,7 +123,7 @@ export class _HashReaderImpl implements IonHashReader, _IonValue {
     _value(): ReaderScalarValue { return this.value() }
 }
 
-export class _HashWriterImpl implements IonHashWriter, _IonValue {
+export class _HashWriterImpl implements HashWriter, _IonValue {
     private readonly _hasher: _Hasher;
 
     private __ionType: IonType | null = null;
@@ -132,8 +132,8 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     private __isNull: boolean = false;
     private __value: ReaderScalarValue = null;
 
-    constructor(private readonly _writer: IonWriter,
-                private readonly _hashFunctionProvider: IonHasherProvider) {
+    constructor(private readonly _writer: Writer,
+                private readonly _hashFunctionProvider: HasherProvider) {
         this._hasher = new _Hasher(this._hashFunctionProvider);
     }
 
@@ -226,11 +226,11 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
         this._writer.writeFieldName(fieldName);
     }
 
-    writeValue(reader: IonReader): void {
+    writeValue(reader: Reader): void {
         this._writeValue(reader);
     }
 
-    private _writeValue(reader: IonReader, _depth = 0): void {
+    private _writeValue(reader: Reader, _depth = 0): void {
         let type: IonType | null = reader.type();
         if (type === null) {
             return;
@@ -269,11 +269,11 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
         }
     }
 
-    writeValues(reader: IonReader): void {
+    writeValues(reader: Reader): void {
         this._writeValues(reader);
     }
 
-    private _writeValues(reader: IonReader, _depth = 0): void {
+    private _writeValues(reader: Reader, _depth = 0): void {
         let type: IonType | null = reader.type();
         if (type === null) {
             type = reader.next();
@@ -288,7 +288,7 @@ export class _HashWriterImpl implements IonHashWriter, _IonValue {
     close         (): void       { }
     depth         (): number     { return this._writer.depth() }
 
-    // implements IonHashWriter
+    // implements HashWriter
     digest(): Uint8Array { return this._hasher._digest() }
 
     // implements _IonValue
@@ -303,7 +303,7 @@ class _Hasher {
     private _currentHasher: _Serializer;
     private readonly _hasherStack: _Serializer[] = [];
 
-    constructor(private readonly _ihp: IonHasherProvider) {
+    constructor(private readonly _ihp: HasherProvider) {
         this._currentHasher = new _Serializer(this._ihp(), 0);
         this._hasherStack.push(this._currentHasher);
     }
@@ -356,22 +356,22 @@ class _Hasher {
 }
 
 class _Serializer {
-    private static readonly _serializers: { [typeName: string]: (value: any, writer: IonWriter) => void } = {
-        "null":      (value: any, writer: IonWriter) => { writer.writeNull(IonTypes.NULL) },
-        "bool":      (value: any, writer: IonWriter) => { writer.writeBoolean(value) },
-        "int":       (value: any, writer: IonWriter) => { writer.writeInt(value) },
-        "float":     (value: any, writer: IonWriter) => { writer.writeFloat64(value) },
-        "decimal":   (value: any, writer: IonWriter) => { writer.writeDecimal(value) },
-        "timestamp": (value: any, writer: IonWriter) => { writer.writeTimestamp(value) },
-        "symbol":    (value: any, writer: IonWriter) => { writer.writeString(value) },
-        "string":    (value: any, writer: IonWriter) => { writer.writeString(value) },
-        "clob":      (value: any, writer: IonWriter) => { writer.writeClob(value) },
-        "blob":      (value: any, writer: IonWriter) => { writer.writeBlob(value) },
+    private static readonly _serializers: { [typeName: string]: (value: any, writer: Writer) => void } = {
+        "null":      (value: any, writer: Writer) => { writer.writeNull(IonTypes.NULL) },
+        "bool":      (value: any, writer: Writer) => { writer.writeBoolean(value) },
+        "int":       (value: any, writer: Writer) => { writer.writeInt(value) },
+        "float":     (value: any, writer: Writer) => { writer.writeFloat64(value) },
+        "decimal":   (value: any, writer: Writer) => { writer.writeDecimal(value) },
+        "timestamp": (value: any, writer: Writer) => { writer.writeTimestamp(value) },
+        "symbol":    (value: any, writer: Writer) => { writer.writeString(value) },
+        "string":    (value: any, writer: Writer) => { writer.writeString(value) },
+        "clob":      (value: any, writer: Writer) => { writer.writeClob(value) },
+        "blob":      (value: any, writer: Writer) => { writer.writeBlob(value) },
     };
 
     private _hasContainerAnnotations = false;
 
-    constructor(public _hashFunction: IonHasher, private readonly _depth: number) {
+    constructor(public _hashFunction: Hasher, private readonly _depth: number) {
     }
 
     _handleFieldName(fieldName: string | null | undefined) {
@@ -506,9 +506,9 @@ class _StructSerializer extends _Serializer {
     private readonly _scalarSerializer: _Serializer;
     private readonly _fieldHashes: Uint8Array[] = [];
 
-    constructor(hashFunction: IonHasher,
+    constructor(hashFunction: Hasher,
                 depth: number,
-                hashFunctionProvider: IonHasherProvider) {
+                hashFunctionProvider: HasherProvider) {
         super(hashFunction, depth);
         this._scalarSerializer = new _Serializer(hashFunctionProvider(), depth + 1);
         this._fieldHashes = [];
