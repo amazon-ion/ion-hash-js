@@ -19,12 +19,12 @@ const {assert} = intern.getPlugin('chai');
 import {IonTypes, makeBinaryWriter, makeTextWriter} from 'ion-js';
 
 import {makeHashWriter} from '../src/IonHash';
-import {testIonHasherProvider} from './testutil';
+import {testHasherProvider} from './testutil';
 
-registerSuite('IonHashWriter', {
+registerSuite('HashWriter', {
     topLevelValues: () => {
         let writer = makeTextWriter();
-        let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
+        let hashWriter = makeHashWriter(writer, testHasherProvider('identity'));
 
         assert.deepEqual(hashWriter.digest(), new Uint8Array());
 
@@ -46,7 +46,7 @@ registerSuite('IonHashWriter', {
             [0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04, 0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e]);
 
         let writer = makeTextWriter();
-        let hashWriter = makeHashWriter(writer, testIonHasherProvider('md5'));
+        let hashWriter = makeHashWriter(writer, testHasherProvider('md5'));
 
         assert.deepEqual(hashWriter.digest(), md5initialDigest);
         hashWriter.writeNull(IonTypes.NULL);
@@ -57,7 +57,7 @@ registerSuite('IonHashWriter', {
 
     writeScalarNull: () => {
         let writer = makeTextWriter();
-        let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
+        let hashWriter = makeHashWriter(writer, testHasherProvider('identity'));
 
         hashWriter.writeNull(IonTypes.STRING);
         let writeNullDigest = hashWriter.digest();
@@ -69,7 +69,7 @@ registerSuite('IonHashWriter', {
     },
 
     digestTooEarly: () => {
-        let hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('identity'));
+        let hashWriter = makeHashWriter(makeBinaryWriter(), testHasherProvider('identity'));
         hashWriter.stepIn(IonTypes.STRUCT);
         hashWriter.writeFieldName('a');
         hashWriter.writeInt(5);
@@ -80,7 +80,7 @@ registerSuite('IonHashWriter', {
         let writer = makeBinaryWriter();
         writer.stepIn(IonTypes.STRUCT);
 
-        let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
+        let hashWriter = makeHashWriter(writer, testHasherProvider('identity'));
         assert.throws(() => { hashWriter.stepOut() });
     },
 });

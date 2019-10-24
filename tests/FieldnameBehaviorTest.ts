@@ -19,7 +19,7 @@ const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 
 import {makeHashReader, makeHashWriter} from '../src/IonHash';
-import {sexpStringToBytes, testIonHasherProvider} from './testutil';
+import {sexpStringToBytes, testHasherProvider} from './testutil';
 
 registerSuite('FieldnameBehavior', {
     null:       () => { test("null", "(0x0b 0x0f 0x0e)") },
@@ -47,12 +47,12 @@ registerSuite('FieldnameBehavior', {
 function test(ionStr: string, expectedSexpBytes: string) {
     let expectedDigest = sexpStringToBytes(expectedSexpBytes);
 
-    // verify IonHashWriter behavior:
+    // verify HashWriter behavior:
     //let writer = makeBinaryWriter();    // https://github.com/amzn/ion-hash-js/issues/2
     let writer = makeTextWriter();
     writer.stepIn(IonTypes.STRUCT);
 
-    let hashWriter = makeHashWriter(writer, testIonHasherProvider('identity'));
+    let hashWriter = makeHashWriter(writer, testHasherProvider('identity'));
     hashWriter.writeFieldName("field_name");    // this fieldName should not become part of the hash
 
     let reader = makeReader(ionStr);
@@ -69,12 +69,12 @@ function test(ionStr: string, expectedSexpBytes: string) {
     let bytes = writer.getBytes();
 
 
-    // verify IonHashReader behavior:
+    // verify HashReader behavior:
     reader = makeReader(bytes);
     reader.next();
     reader.stepIn();
 
-    let hashReader = makeHashReader(reader, testIonHasherProvider('identity'));
+    let hashReader = makeHashReader(reader, testHasherProvider('identity'));
     hashReader.next();
     hashReader.next();
     let readerActualDigest = hashReader.digest();

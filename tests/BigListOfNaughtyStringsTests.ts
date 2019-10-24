@@ -19,8 +19,8 @@ const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 import {readFileSync} from 'fs';
 
-import {IonHashReader, IonHashWriter, makeHashReader, makeHashWriter} from '../src/IonHash';
-import {testIonHasherProvider, toHexString, writeln} from './testutil';
+import {HashReader, HashWriter, makeHashReader, makeHashWriter} from '../src/IonHash';
+import {testHasherProvider, toHexString, writeln} from './testutil';
 
 class TestValue {
     private static ionPrefix = 'ion::';
@@ -152,10 +152,10 @@ registerSuite('BigListOfNaughtyStringsTests', suite);
 
 
 function runTest(tv: TestValue, testString: string) {
-    let hashWriter: IonHashWriter;
+    let hashWriter: HashWriter;
     try {
         let reader = makeReader(testString);
-        hashWriter = makeHashWriter(makeBinaryWriter(), testIonHasherProvider('md5'));
+        hashWriter = makeHashWriter(makeBinaryWriter(), testHasherProvider('md5'));
         reader.next();
         hashWriter.writeValue(reader);
     } catch (e) {
@@ -165,10 +165,10 @@ function runTest(tv: TestValue, testString: string) {
         }
     }
 
-    let hashReader: IonHashReader;
+    let hashReader: HashReader;
     try {
         let reader = makeReader(testString);
-        hashReader = makeHashReader(reader, testIonHasherProvider('md5'));
+        hashReader = makeHashReader(reader, testHasherProvider('md5'));
         hashReader.next();
         hashReader.next();
     } catch (e) {

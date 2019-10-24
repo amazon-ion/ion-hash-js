@@ -13,12 +13,12 @@
  * permissions and limitations under the License.
  */
 
-import {IonType, IonTypes, makeReader, makeTextWriter, Reader as IonReader, Writer as IonWriter} from 'ion-js';
+import {makeReader, makeTextWriter, Reader} from 'ion-js';
 
-import {IonHasher, IonHasherProvider} from "../src/IonHash";
+import {Hasher, HasherProvider} from "../src/IonHash";
 import {createHash, Hash} from 'crypto';
 
-class IdentityIonHasher implements IonHasher {
+class IdentityHasher implements Hasher {
     private allBytes: number[] = [];
 
     constructor(private readonly log: string[] = []) {
@@ -39,7 +39,7 @@ class IdentityIonHasher implements IonHasher {
     }
 }
 
-class CryptoTestIonHasher implements IonHasher {
+class CryptoTestHasher implements Hasher {
     private hash: Hash;
 
     constructor(private readonly algorithm: string, private readonly log: string[] = []) {
@@ -58,12 +58,12 @@ class CryptoTestIonHasher implements IonHasher {
     }
 }
 
-export function testIonHasherProvider(algorithm: string, log?: string[]): IonHasherProvider {
-    return (): IonHasher => {
+export function testHasherProvider(algorithm: string, log?: string[]): HasherProvider {
+    return (): Hasher => {
         if (algorithm == 'identity') {
-            return new IdentityIonHasher(log);
+            return new IdentityHasher(log);
         } else {
-            return new CryptoTestIonHasher(algorithm, log);
+            return new CryptoTestHasher(algorithm, log);
         }
     };
 }
@@ -75,7 +75,7 @@ export function sexpStringToBytes(sexpStr: string): Uint8Array {
     return sexpToBytes(reader);
 }
 
-export function sexpToBytes(reader: IonReader, options = { asIonBinary: false }): Uint8Array {
+export function sexpToBytes(reader: Reader, options = { asIonBinary: false }): Uint8Array {
     let bytes: number[];
     if (options.asIonBinary) {
         bytes = [0xE0, 0x01, 0x00, 0xEA];
@@ -91,7 +91,7 @@ export function sexpToBytes(reader: IonReader, options = { asIonBinary: false })
 }
 
 
-export function readerToString(reader: IonReader): string {
+export function readerToString(reader: Reader): string {
     let writer = makeTextWriter();
     writer.writeValue(reader);
     writer.close();

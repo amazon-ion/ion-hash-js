@@ -19,9 +19,9 @@ const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 import {readFileSync} from 'fs';
 
-import {makeBinaryWriter, makeReader, makeTextWriter, Reader as IonReader, Writer as IonWriter} from 'ion-js';
+import {makeBinaryWriter, makeReader, makeTextWriter, Reader, Writer} from 'ion-js';
 import {makeHashReader, makeHashWriter} from '../src/IonHash';
-import {sexpToBytes, testIonHasherProvider, toHexString, readerToString, writeln} from './testutil';
+import {sexpToBytes, testHasherProvider, toHexString, readerToString, writeln} from './testutil';
 
 // builds a test suite based on the contents of ion_hash_tests.ion
 
@@ -44,8 +44,8 @@ let textReaderDigester: Digester = (ionData: string | Uint8Array, algorithm: str
     readerDigester(makeReader(ionData), algorithm, hasherLog);
 };
 
-function readerDigester(reader: IonReader, algorithm: string, hasherLog: string[]): void {
-    function traverse(reader: IonReader) {
+function readerDigester(reader: Reader, algorithm: string, hasherLog: string[]): void {
+    function traverse(reader: Reader) {
         for (let type; type = reader.next(); ) {
             if (type.isContainer && !reader.isNull()) {
                 reader.stepIn();
@@ -54,7 +54,7 @@ function readerDigester(reader: IonReader, algorithm: string, hasherLog: string[
             }
         }
     }
-    let hashReader = makeHashReader(reader, testIonHasherProvider(algorithm, hasherLog));
+    let hashReader = makeHashReader(reader, testHasherProvider(algorithm, hasherLog));
     traverse(hashReader);
     hashReader.digest();
 }
@@ -62,7 +62,7 @@ function readerDigester(reader: IonReader, algorithm: string, hasherLog: string[
 let readerSkipDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
     let hashReader = makeHashReader(
         makeReader(ionData),
-        testIonHasherProvider(algorithm, hasherLog));
+        testHasherProvider(algorithm, hasherLog));
     hashReader.next();
     hashReader.next();
     hashReader.digest();
@@ -76,10 +76,10 @@ let textWriterDigester: Digester = (ionData: string | Uint8Array, algorithm: str
     writerDigester(makeTextWriter(), ionData, algorithm, hasherLog);
 };
 
-function writerDigester(writer: IonWriter, ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
+function writerDigester(writer: Writer, ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
     let reader = makeReader(ionData);
     reader.next();
-    let hashWriter = makeHashWriter(writer, testIonHasherProvider(algorithm, hasherLog));
+    let hashWriter = makeHashWriter(writer, testHasherProvider(algorithm, hasherLog));
     hashWriter.writeValue(reader);
     hashWriter.digest();
 }
@@ -97,20 +97,20 @@ function test(ionData: string | Uint8Array,
               expect: string,
               digester: Digester): void {
 
-    let expectedIonHasherLog = getExpectedIonHasherLog(expect);
-    let actualIonHasherLog: string[] = [];
+    let expectedHasherLog = getExpectedHasherLog(expect);
+    let actualHasherLog: string[] = [];
 
-    digester(ionData, algorithm, actualIonHasherLog);
+    digester(ionData, algorithm, actualHasherLog);
 
-    if (expectedIonHasherLog.length == 1
-        && expectedIonHasherLog[0].startsWith('final_digest::')) {
-        assert.deepEqual('final_' + actualIonHasherLog.pop(), expectedIonHasherLog[0]);
+    if (expectedHasherLog.length == 1
+        && expectedHasherLog[0].startsWith('final_digest::')) {
+        assert.deepEqual('final_' + actualHasherLog.pop(), expectedHasherLog[0]);
     } else {
         if (algorithm == 'md5') {
-            expectedIonHasherLog = expectedIonHasherLog.filter(
+            expectedHasherLog = expectedHasherLog.filter(
                 entry => entry.startsWith('digest::'));
         }
-        assert.deepEqual(actualIonHasherLog, expectedIonHasherLog);
+        assert.deepEqual(actualHasherLog, expectedHasherLog);
     }
 }
 
@@ -178,7 +178,7 @@ for (const suite in suites) {
 }
 
 
-function getExpectedIonHasherLog(expect: string): string[] {
+function getExpectedHasherLog(expect: string): string[] {
     let log: string[] = [];
     let reader = makeReader(expect);
     reader.next();
