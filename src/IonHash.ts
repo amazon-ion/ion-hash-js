@@ -18,7 +18,7 @@ import {Reader, Writer} from 'ion-js';
 import {_HashReaderImpl, _HashWriterImpl, _CryptoHasher} from './internal/IonHashImpl';
 
 /**
- * Wraps the provided Reader as an HashReader.
+ * Wraps the provided Reader as a HashReader.
  *
  * @param reader
  * @param hashFunctionProvider
@@ -29,7 +29,7 @@ export function makeHashReader(reader: Reader,
 }
 
 /**
- * Wraps the provided Writer as an HashWriter.
+ * Wraps the provided Writer as a HashWriter.
  *
  * @param writer
  * @param hashFunctionProvider
@@ -77,7 +77,7 @@ export interface HashWriter extends Writer {
 
 
 /**
- * Implementations of this function type interface create an Hasher
+ * Implementations of this function type interface create a Hasher
  * instance when invoked.
  *
  * @see [[cryptoHasherProvider]]
@@ -108,7 +108,7 @@ export interface Hasher {
 }
 
 /**
- * An HasherProvider implementation backed by node's [crypto](https://node.readthedocs.io/en/latest/api/crypto/)
+ * A HasherProvider implementation backed by node's [crypto](https://node.readthedocs.io/en/latest/api/crypto/)
  * module.
  *
  * @param algorithm specifies the algorithm to use when invoking `crypto.createHash()`
