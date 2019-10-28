@@ -387,6 +387,10 @@ class _Serializer {
             this._beginMarker();
             this._update(_TQ_ANNOTATED_VALUE);
             for (let annotation of annotations) {
+                // https://github.com/amzn/ion-hash-js/issues/29
+                if (annotation === '$0') {
+                    throw new Error("Symbol ID '$0' is not currently supported.");
+                }
                 this._writeSymbol(annotation);
             }
             if (isContainer) {
