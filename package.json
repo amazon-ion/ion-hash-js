@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "crypto": "^1.0.1",
-    "ion-js": "^3.0.0"
+    "ion-js": "^3.1.1"
   }
 }
 
