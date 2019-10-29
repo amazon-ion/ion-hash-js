@@ -21,16 +21,14 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
-    clean: ['dist', 'docs'],
+    clean: ['build', 'dist', 'docs'],
 
     ts: {
-      tsconfig: 'tsconfig.json',
       'commonjs-es5': {
-        outDir: 'dist/commonjs/es5',
-        options: {
-          target: 'es5',
-          module: 'commonjs',
-        },
+        tsconfig: 'tsconfig.commonjs.json',
+      },
+      'tests': {
+        tsconfig: 'tsconfig.tests.json',
       },
     },
 
@@ -39,7 +37,7 @@ module.exports = function(grunt) {
         options: {
           reporters: ['runner'],
           suites: [
-            'dist/commonjs/es5/**/*.js',
+            'build/tests/*.js',
           ],
         },
       },
@@ -63,7 +61,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('build',   ['clean', 'ts:commonjs-es5']);
-  grunt.registerTask('test',    ['build', 'intern:es5']);
+  grunt.registerTask('test',    ['build', 'ts:tests', 'intern:es5']);
   grunt.registerTask('doc',     ['typedoc']);
 
   grunt.registerTask('default', ['test']);
