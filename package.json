@@ -1,6 +1,6 @@
 {
   "name": "ion-hash-js",
-  "version": "0.1.0-SNAPSHOT",
+  "version": "1.0.0",
   "description": "JavaScript implementation of Amazon Ion Hash",
   "main": "dist/commonjs/es5/IonHash.js",
   "types": "dist/commonjs/es5/IonHash.d.ts",
