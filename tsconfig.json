@@ -1,17 +1,13 @@
 {
   "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
     "declaration": true,
     "noImplicitAny": true,
-    "rootDirs": ["src", "tests"],
     "sourceMap": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "types": ["intern"],
     "verbose": true
-  },
-  "include": [
-    "src/**/*.ts",
-    "tests/**/*.ts"
-  ]
+  }
 }
 
