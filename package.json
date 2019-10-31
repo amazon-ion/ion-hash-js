@@ -29,6 +29,7 @@
     "grunt-typedoc": "^0.2.4",
     "intern": "^4.4.3",
     "typedoc": "^0.14.2",
+    "typedoc-plugin-no-inherit": "^1.1.10",
     "typescript": "^3.5.3"
   },
   "dependencies": {
