@@ -26,12 +26,12 @@ This library is designed to work with Node 8/ES5/CommonJS.
 1. Use the library to read an Ion value and generate an Ion hash:
     ```javascript
     import * as ion from 'ion-js';
-    import {cryptoIonHasherProvider, makeHashReader} from 'ion-hash-js';
+    import {cryptoHasherProvider, makeHashReader} from 'ion-hash-js';
     
     let ionStr = '[1, 2, 3]';
     let hashReader = makeHashReader(
             ion.makeReader(ionStr),
-            cryptoIonHasherProvider('md5'));
+            cryptoHasherProvider('md5'));
     hashReader.next();
     hashReader.next();
     let digest = hashReader.digest();
@@ -51,11 +51,11 @@ This library is designed to work with Node 8/ES5/CommonJS.
     ```javascript
     import * as ion from 'ion-js';
     import {IonTypes} from 'ion-js';
-    import {cryptoIonHasherProvider, makeHashWriter} from 'ion-hash-js';
+    import {cryptoHasherProvider, makeHashWriter} from 'ion-hash-js';
 
     let hashWriter = makeHashWriter(
             ion.makeTextWriter(),
-            cryptoIonHasherProvider('md5'));
+            cryptoHasherProvider('md5'));
     hashWriter.stepIn(IonTypes.LIST);
     hashWriter.writeInt(1);
     hashWriter.writeInt(2);
