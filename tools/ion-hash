@@ -1,0 +1,4 @@
+#!/bin/sh
+
+node $(dirname "$0")/ion-hash.js $@
+
