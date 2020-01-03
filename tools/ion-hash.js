@@ -14,7 +14,7 @@
  */
 
 let ion = require('ion-js');
-let ionhash = require('../../dist/commonjs/es5/IonHash');
+let ionhash = require('../dist/commonjs/es5/IonHash');
 let fs = require('fs');
 let readline = require('readline');
 
