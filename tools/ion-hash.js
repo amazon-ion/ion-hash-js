@@ -13,33 +13,38 @@
  * permissions and limitations under the License.
  */
 
+let fs = require('fs');
 let ion = require('ion-js');
 let ionhash = require('../dist/commonjs/es5/IonHash');
-let fs = require('fs');
-let readline = require('readline');
+
+if (process.argv.length < 4) {
+    console.log("Utility that prints the Ion Hash of the top-level values in a file.");
+    console.log();
+    console.log("Usage:");
+    console.log("  ion-hash [algorithm] [filename]");
+    console.log();
+    console.log("where [algorithm] is a hash function such as sha256");
+    console.log();
+    process.exit(1);
+}
 
 let algorithm = process.argv[2];
-let inputStream = process.stdin;
-if (process.argv.length > 3) {
-  inputStream = fs.createReadStream(process.argv[3]);
-}
-let hasherProvider = new ionhash.cryptoHasherProvider(algorithm);
+let filename = process.argv[3];
 
-readline.createInterface({
-    input: inputStream,
-    output: process.stdout,
-    terminal: false
-}).on('line', (line) => {
+let values = fs.readFileSync(filename);
+let reader = ion.makeReader(values);
+let hasherProvider = new ionhash.cryptoHasherProvider(algorithm);
+let hashReader = ionhash.makeHashReader(reader, hasherProvider);
+
+let ionType = hashReader.next();
+while (ionType) {
     try {
-        let reader = ion.makeReader(line);
-        let hashReader = ionhash.makeHashReader(reader, hasherProvider);
-        hashReader.next();
-        hashReader.next();
+	ionType = hashReader.next();
         console.log(toHexString(hashReader.digest()));
     } catch (e) {
         console.log('[unable to digest: ' + e + ']');
     }
-});
+}
 
 function toHexString(byteArray) {
     let sb = '';
