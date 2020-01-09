@@ -39,7 +39,7 @@ let hashReader = ionhash.makeHashReader(reader, hasherProvider);
 let ionType = hashReader.next();
 while (ionType) {
     try {
-	ionType = hashReader.next();
+        ionType = hashReader.next();
         console.log(toHexString(hashReader.digest()));
     } catch (e) {
         console.log('[unable to digest: ' + e + ']');
