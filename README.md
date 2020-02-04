@@ -1,12 +1,6 @@
-## ion-hash-js
+## Amazon Ion Hash JavaScript
 
-A JavaScript implementation of the Ion Hash Specification.
-
-## License
-
-This library is licensed under the Apache 2.0 License. 
-=======
-An implementation of [Amazon Ion Hash](https://amzn.github.io/ion-hash/docs/spec.html) for JavaScript.
+An implementation of [Amazon Ion Hash](http://amzn.github.io/ion-hash) in JavaScript.
 
 [![Build Status](https://travis-ci.org/amzn/ion-hash-js.svg?branch=master)](https://travis-ci.org/amzn/ion-hash-js)
 [![npm version](https://img.shields.io/npm/v/ion-hash-js.svg)](https://www.npmjs.com/package/ion-hash-js)
@@ -100,3 +94,8 @@ $ git submodule update
 
 Any tests commented out in [tests/ion_hash_tests.ion](https://github.com/amzn/ion-hash-js/blob/master/tests/ion_hash_tests.ion)
 are not expected to work at this time.
+
+
+## License
+
+This library is licensed under the Apache 2.0 License. 
