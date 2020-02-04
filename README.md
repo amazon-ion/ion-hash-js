@@ -1,4 +1,4 @@
-## Amazon Ion Hash JavaScript
+# Amazon Ion Hash JavaScript
 
 An implementation of [Amazon Ion Hash](http://amzn.github.io/ion-hash) in JavaScript.
 
@@ -7,7 +7,7 @@ An implementation of [Amazon Ion Hash](http://amzn.github.io/ion-hash) in JavaSc
 [![license](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/amzn/ion-hash-js/blob/master/LICENSE)
 [![docs](https://img.shields.io/badge/docs-api-green.svg?style=flat-square)](https://amzn.github.io/ion-hash-js/api)
 
-# Getting Started
+## Getting Started
 
 This library is designed to work with Node 8/ES5/CommonJS.
 
