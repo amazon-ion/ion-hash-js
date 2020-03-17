@@ -5,7 +5,6 @@
   "main": "dist/commonjs/es5/IonHash.js",
   "types": "dist/commonjs/es5/IonHash.d.ts",
   "scripts": {
-    "prepare": "grunt",
     "test": "grunt test",
     "release": "grunt release"
   },
