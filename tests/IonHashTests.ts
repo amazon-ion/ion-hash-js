@@ -116,7 +116,7 @@ function test(ionData: string | Uint8Array,
 
     } else if (actualHasherLog.length == 1
             && actualHasherLog[0].startsWith('final_digest::')) {
-        // added so the digestFunctionDigester can assert against just the final
+        // added so the digestFunction digester can assert against just the final
         // expected md5 hash (as it can't provide intermediate md5 hashes):
         assert.deepEqual(actualHasherLog[0], 'final_' + expectedHasherLog.pop());
 
