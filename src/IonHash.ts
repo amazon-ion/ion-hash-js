@@ -122,8 +122,9 @@ export function cryptoHasherProvider(algorithm: string): HasherProvider {
 }
 
 /**
- * Computes the Ion hash for the given a value and the name of an algorithm known to
- * node's [crypto](https://node.readthedocs.io/en/latest/api/crypto/) module.
+ * Computes the Ion hash of a value using the specified hash algorithm.
+ * The algorithm must be known to node's
+ * [crypto](https://node.readthedocs.io/en/latest/api/crypto/) module.
  *
  * @param value the native JavaScript value or instance of ion-js's dom.Value to be hashed
  * @param algorithm specifies the algorithm to use when invoking `crypto.createHash()`
