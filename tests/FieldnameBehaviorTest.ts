@@ -48,7 +48,6 @@ function test(ionStr: string, expectedSexpBytes: string) {
     let expectedDigest = sexpStringToBytes(expectedSexpBytes);
 
     // verify HashWriter behavior:
-    //let writer = makeBinaryWriter();    // https://github.com/amzn/ion-hash-js/issues/2
     let writer = makeTextWriter();
     writer.stepIn(IonTypes.STRUCT);
 
