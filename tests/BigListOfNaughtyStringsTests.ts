@@ -13,13 +13,13 @@
  * permissions and limitations under the License.
  */
 
-import {makeBinaryWriter, makeReader} from 'ion-js';
+import {load, makeBinaryWriter, makeReader} from 'ion-js';
 
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 import {readFileSync} from 'fs';
 
-import {HashReader, HashWriter, makeHashReader, makeHashWriter} from '../src/IonHash';
+import {digest, HashReader, HashWriter, makeHashReader, makeHashWriter} from '../src/IonHash';
 import {testHasherProvider, toHexString, writeln} from './testutil';
 
 class TestValue {
@@ -179,8 +179,9 @@ function runTest(tv: TestValue, testString: string) {
     }
 
     if (tv.validIon == null || tv.validIon) {
-        assert.equal(toHexString(hashWriter!.digest()),
-            toHexString(hashReader!.digest()));
+        let writerDigest = toHexString(hashWriter!.digest());
+        assert.deepEqual(writerDigest, toHexString(hashReader!.digest()));
+        assert.deepEqual(writerDigest, toHexString(digest(load(testString), 'md5')));
     }
 }
 

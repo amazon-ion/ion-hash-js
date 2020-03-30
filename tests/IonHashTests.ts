@@ -19,8 +19,9 @@ const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
 import {readFileSync} from 'fs';
 
-import {makeBinaryWriter, makeReader, makeTextWriter, Reader, Writer} from 'ion-js';
+import {load, makeBinaryWriter, makeReader, makeTextWriter, Reader, Writer} from 'ion-js';
 import {makeHashReader, makeHashWriter} from '../src/IonHash';
+import * as ionhash from '../src/IonHash';
 import {sexpToBytes, testHasherProvider, toHexString, readerToString, writeln} from './testutil';
 
 // builds a test suite based on the contents of ion_hash_tests.ion
@@ -30,7 +31,9 @@ interface Digester {
     (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void;
 }
 
-let binaryReaderDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
+let binaryReaderDigester: Digester = (ionData: string | Uint8Array,
+                                      algorithm: string,
+                                      hasherLog: string[]): void => {
     let reader = makeReader(ionData);
     let writer = makeBinaryWriter();
     reader.next();
@@ -40,7 +43,9 @@ let binaryReaderDigester: Digester = (ionData: string | Uint8Array, algorithm: s
     readerDigester(makeReader(ionBinary), algorithm, hasherLog);
 };
 
-let textReaderDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
+let textReaderDigester: Digester = (ionData: string | Uint8Array,
+                                    algorithm: string,
+                                    hasherLog: string[]): void => {
     readerDigester(makeReader(ionData), algorithm, hasherLog);
 };
 
@@ -59,7 +64,9 @@ function readerDigester(reader: Reader, algorithm: string, hasherLog: string[]):
     hashReader.digest();
 }
 
-let readerSkipDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
+let readerSkipDigester: Digester = (ionData: string | Uint8Array,
+                                    algorithm: string,
+                                    hasherLog: string[]): void => {
     let hashReader = makeHashReader(
         makeReader(ionData),
         testHasherProvider(algorithm, hasherLog));
@@ -68,15 +75,22 @@ let readerSkipDigester: Digester = (ionData: string | Uint8Array, algorithm: str
     hashReader.digest();
 };
 
-let binaryWriterDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
+let binaryWriterDigester: Digester = (ionData: string | Uint8Array,
+                                      algorithm: string,
+                                      hasherLog: string[]): void => {
     writerDigester(makeBinaryWriter(), ionData, algorithm, hasherLog);
 };
 
-let textWriterDigester: Digester = (ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void => {
+let textWriterDigester: Digester = (ionData: string | Uint8Array,
+                                    algorithm: string,
+                                    hasherLog: string[]): void => {
     writerDigester(makeTextWriter(), ionData, algorithm, hasherLog);
 };
 
-function writerDigester(writer: Writer, ionData: string | Uint8Array, algorithm: string, hasherLog: string[]): void {
+function writerDigester(writer: Writer,
+                        ionData: string | Uint8Array,
+                        algorithm: string,
+                        hasherLog: string[]): void {
     let reader = makeReader(ionData);
     reader.next();
     let hashWriter = makeHashWriter(writer, testHasherProvider(algorithm, hasherLog));
@@ -84,12 +98,21 @@ function writerDigester(writer: Writer, ionData: string | Uint8Array, algorithm:
     hashWriter.digest();
 }
 
+let digestFunctionDigester: Digester = (ionData: string | Uint8Array,
+                                        algorithm: string,
+                                        hasherLog: string[]): void => {
+    let value = load(ionData);
+    let digest = ionhash.digest(value, algorithm);
+    hasherLog.push('final_digest::(' + toHexString(digest) + ')');
+};
+
 let digesters: { [digesterName: string]: Digester } = {
     BinaryReader: binaryReaderDigester,
     BinaryWriter: binaryWriterDigester,
     ReaderSkip: readerSkipDigester,
     TextReader: textReaderDigester,
     TextWriter: textWriterDigester,
+    digestFunction: digestFunctionDigester,
 };
 
 function test(ionData: string | Uint8Array,
@@ -103,8 +126,15 @@ function test(ionData: string | Uint8Array,
     digester(ionData, algorithm, actualHasherLog);
 
     if (expectedHasherLog.length == 1
-        && expectedHasherLog[0].startsWith('final_digest::')) {
+            && expectedHasherLog[0].startsWith('final_digest::')) {
         assert.deepEqual('final_' + actualHasherLog.pop(), expectedHasherLog[0]);
+
+    } else if (actualHasherLog.length == 1
+            && actualHasherLog[0].startsWith('final_digest::')) {
+        // added so the digestFunction digester can assert against just the final
+        // expected md5 hash (as it can't provide intermediate md5 hashes):
+        assert.deepEqual(actualHasherLog[0], 'final_' + expectedHasherLog.pop());
+
     } else {
         if (algorithm == 'md5') {
             expectedHasherLog = expectedHasherLog.filter(
@@ -162,8 +192,10 @@ for (let type; type = reader.next(); ) {
         }
 
         for (const digester in digesters) {
-            suites[digester][theTestName] = () => {
-                test(ionData, algorithm, expects[algorithm], digesters[digester]);
+            if (!(digester == 'digestFunction' && algorithm == 'identity')) {
+                suites[digester][theTestName] = () => {
+                    test(ionData, algorithm, expects[algorithm], digesters[digester]);
+                }
             }
         }
     }

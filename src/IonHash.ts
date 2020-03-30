@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-import {Reader, Writer} from 'ion-js';
+import {dom, makeBinaryWriter, Reader, Writer} from 'ion-js';
 
 import {_HashReaderImpl, _HashWriterImpl, _CryptoHasher} from './internal/IonHashImpl';
 
@@ -119,5 +119,27 @@ export interface Hasher {
  */
 export function cryptoHasherProvider(algorithm: string): HasherProvider {
     return (): Hasher => { return new _CryptoHasher(algorithm) };
+}
+
+/**
+ * Computes the Ion hash of a value using the specified hash algorithm.
+ * The algorithm must be known to node's
+ * [crypto](https://node.readthedocs.io/en/latest/api/crypto/) module.
+ *
+ * @param value the native JavaScript value or instance of ion-js's dom.Value to be hashed
+ * @param algorithm specifies the algorithm to use when invoking `crypto.createHash()`
+ *                  (e.g., 'sha1', 'md5', 'sha256', 'sha512')
+ * @return bytes representing the Ion hash of the value
+ * @throws if the specified algorithm isn't supported
+ */
+export function digest(value: any, algorithm: string): Uint8Array {
+    let writer = makeBinaryWriter();
+    let hashProvider = cryptoHasherProvider(algorithm);
+    let hashWriter = makeHashWriter(writer, hashProvider);
+    dom.Value.from(value).writeTo(hashWriter);
+    hashWriter.close();
+    writer.close();
+
+    return hashWriter.digest();
 }
 
