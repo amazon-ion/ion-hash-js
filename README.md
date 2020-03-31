@@ -13,55 +13,78 @@ This library is designed to work with Node 8/ES5/CommonJS.
 
 ## Node
 
-1. Add ion-hash-js to your dependencies using npm:
+1. Add dependencies for ion-hash-js and its peerDependencies:
     ```
-    npm install --save ion-hash-js
+    npm install --save-dev ion-hash-js
+    npm install --save-dev ion-js
+    npm install --save-dev jsbi
     ```
-1. Use the library to read an Ion value and generate an Ion hash:
+
+1. Note the examples below assume the availability of
+   the following utility method:
     ```javascript
-    import * as ion from 'ion-js';
-    import {cryptoHasherProvider, makeHashReader} from 'ion-hash-js';
-    
-    let ionStr = '[1, 2, 3]';
-    let hashReader = makeHashReader(
-            ion.makeReader(ionStr),
-            cryptoHasherProvider('md5'));
-    hashReader.next();
-    hashReader.next();
-    let digest = hashReader.digest();
-    
-    process.stdout.write('digest:  ');
-    digest.forEach((b: number) => {
-        process.stdout.write(('0' + (b & 0xFF).toString(16)).slice(-2) + ' ');
-    });
-    process.stdout.write('\n');
+    function toHexString(byteArray) {
+        let sb = '';
+        byteArray.forEach(b => {
+            if (sb != '') { sb += ' ' }
+            sb += ('0' + (b & 0xFF).toString(16)).slice(-2);
+        });
+        return sb;
+    }
+    ```
+
+1. Use the library to generate the Ion hash of any value:
+    ```javascript
+    let ionHash = require('ion-hash-js');
+
+    let digest = ionHash.digest([1, 2, 3], 'md5');
+    console.log('digest: ' + toHexString(digest));
     ```
 
     produces:
 
     ```digest:  8f 3b f4 b1 93 5c f4 69 c9 c1 0c 31 52 4b 26 25```
 
-1. Use the library to write Ion data:
-    ```javascript
-    import * as ion from 'ion-js';
-    import {IonTypes} from 'ion-js';
-    import {cryptoHasherProvider, makeHashWriter} from 'ion-hash-js';
+1. Use cases for which a more efficient API is preferable
+   should consider using the low-level HashReader API
+   to generate an Ion hash:
 
-    let hashWriter = makeHashWriter(
-            ion.makeTextWriter(),
-            cryptoHasherProvider('md5'));
-    hashWriter.stepIn(IonTypes.LIST);
+    ```javascript
+    let ion = require('ion-js');
+    let ionHash = require('ion-hash-js');
+
+    let ionStr = '[1, 2, 3]';
+    let hashReader = ionHash.makeHashReader(
+        ion.makeReader(ionStr),
+        ionHash.cryptoHasherProvider('md5'));
+    hashReader.next();
+    hashReader.next();
+
+    let digest = hashReader.digest();
+    console.log('digest: ' + toHexString(digest));
+    ```
+
+    produces:
+
+    ```digest:  8f 3b f4 b1 93 5c f4 69 c9 c1 0c 31 52 4b 26 25```
+
+1. A low-level HashWriter API may be used to generate an Ion hash
+   while writing Ion data:
+    ```javascript
+    let ion = require('ion-js');
+    let ionHash = require('ion-hash-js');
+
+    let hashWriter = ionHash.makeHashWriter(
+        ion.makeTextWriter(),
+        ionHash.cryptoHasherProvider('md5'));
+    hashWriter.stepIn(ion.IonTypes.LIST);
     hashWriter.writeInt(1);
     hashWriter.writeInt(2);
     hashWriter.writeInt(3);
     hashWriter.stepOut();
-    let digest = hashWriter.digest();
 
-    process.stdout.write('digest:  ');
-    digest.forEach((b: number) => {
-        process.stdout.write(('0' + (b & 0xFF).toString(16)).slice(-2) + ' ');
-    });
-    process.stdout.write('\n');
+    let digest = hashWriter.digest();
+    console.log('digest: ' + toHexString(digest));
     ```
 
     produces:
