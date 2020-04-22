@@ -15,9 +15,7 @@ This library is designed to work with Node 8/ES5/CommonJS.
 
 1. Add dependencies for ion-hash-js and its peerDependencies:
     ```
-    npm install --save-dev ion-hash-js
-    npm install --save-dev ion-js
-    npm install --save-dev jsbi
+    npm install --save ion-hash-js ion-js jsbi
     ```
 
 1. Note the examples below assume the availability of
