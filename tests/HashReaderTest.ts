@@ -14,6 +14,7 @@
  */
 
 import JSBI from "jsbi";
+import intern from 'intern';
 
 const {registerSuite} = intern.getPlugin('interface.object');
 const {assert} = intern.getPlugin('chai');
@@ -107,6 +108,16 @@ class ReaderComparer implements Reader {
     stepOut() {
         this.readerA.stepOut();
         this.readerB.stepOut();
+    }
+
+    position(): number {
+        assert.deepEqual(this.readerA.position(), this.readerB.position());
+        return this.readerA.position()
+    }
+
+    uInt8ArrayValue(): Uint8Array | null {
+        assert.deepEqual(this.readerA.uInt8ArrayValue(), this.readerB.uInt8ArrayValue());
+        return this.readerA.uInt8ArrayValue()
     }
 }
 

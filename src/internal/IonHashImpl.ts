@@ -70,6 +70,8 @@ export class _HashReaderImpl implements HashReader, _IonValue {
     timestampValue(): Timestamp | null  { return this._reader.timestampValue() }
     type()          : IonType | null    { return this._reader.type() }
     value()         : ReaderScalarValue { return this._reader.value() }
+    position()      : number            { return this._reader.position() }
+    uInt8ArrayValue(): Uint8Array | null { return this._reader.uInt8ArrayValue() }
 
     private _traverse() {
         for (let type; type = this.next(); ) {
