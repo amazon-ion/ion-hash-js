@@ -10,18 +10,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/amzn/ion-hash-js.git"
+    "url": "https://github.com/amazon-ion/ion-hash-js.git"
   },
   "keywords": [
     "ion",
     "hash"
   ],
-  "author": "The Ion Team <ion-team@amazon.com> (https://amzn.github.io/ion-docs/)",
+  "author": "The Ion Team <ion-team@amazon.com> (https://amazon-ion.github.io/ion-docs/)",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/amzn/ion-hash-js/issues"
+    "url": "https://github.com/amazon-ion/ion-hash-js/issues"
   },
-  "homepage": "https://github.com/amzn/ion-hash-js#readme",
+  "homepage": "https://github.com/amazon-ion/ion-hash-js#readme",
   "devDependencies": {
     "grunt": "^1.0.1",
     "grunt-contrib-clean": "^1.0.0",

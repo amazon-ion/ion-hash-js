@@ -1,11 +1,11 @@
 # Amazon Ion Hash JavaScript
 
-An implementation of [Amazon Ion Hash](http://amzn.github.io/ion-hash) in JavaScript.
+An implementation of [Amazon Ion Hash](https://amazon-ion.github.io/ion-hash) in JavaScript.
 
 [![Build Status](https://travis-ci.org/amzn/ion-hash-js.svg?branch=master)](https://travis-ci.org/amzn/ion-hash-js)
 [![npm version](https://img.shields.io/npm/v/ion-hash-js.svg)](https://www.npmjs.com/package/ion-hash-js)
-[![license](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/amzn/ion-hash-js/blob/master/LICENSE)
-[![docs](https://img.shields.io/badge/docs-api-green.svg?style=flat-square)](https://amzn.github.io/ion-hash-js/api)
+[![license](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/amazon-ion/ion-hash-js/blob/master/LICENSE)
+[![docs](https://img.shields.io/badge/docs-api-green.svg?style=flat-square)](https://amazon-ion.github.io/ion-hash-js/api)
 
 ## Getting Started
 
@@ -99,7 +99,7 @@ The easiest way to clone the `ion-hash-js` repository and initialize its `ion-ha
 submodule is to run the following command:
 
 ```
-$ git clone --recursive https://github.com/amzn/ion-hash-js.git ion-hash-js
+$ git clone --recursive https://github.com/amazon-ion/ion-hash-js.git ion-hash-js
 ```
 
 Alternatively, the submodule may be initialized independently from the clone
@@ -113,7 +113,7 @@ $ git submodule update
 
 ## Known Issues
 
-Any tests commented out in [tests/ion_hash_tests.ion](https://github.com/amzn/ion-hash-js/blob/master/tests/ion_hash_tests.ion)
+Any tests commented out in [tests/ion_hash_tests.ion](https://github.com/amazon-ion/ion-hash-js/blob/master/tests/ion_hash_tests.ion)
 are not expected to work at this time.
 
 
