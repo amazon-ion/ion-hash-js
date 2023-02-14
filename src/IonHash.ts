@@ -43,7 +43,7 @@ export function makeHashWriter(writer: Writer,
 /**
  * Reader decorator that computes the Ion hash of values read.
  *
- * @see [Reader](https://amzn.github.io/ion-js/api/interfaces/_ionreader_.reader.html)
+ * @see [Reader](https://amazon-ion.github.io/ion-js/api/interfaces/_ionreader_.reader.html)
  * @noInheritDoc
  */
 export interface HashReader extends Reader {
@@ -64,7 +64,7 @@ export interface HashReader extends Reader {
 /**
  * Writer decorator that computes the Ion hash of written values.
  *
- * @see [Writer](https://amzn.github.io/ion-js/api/interfaces/_ionwriter_.writer.html)
+ * @see [Writer](https://amazon-ion.github.io/ion-js/api/interfaces/_ionwriter_.writer.html)
  * @noInheritDoc
  */
 export interface HashWriter extends Writer {
