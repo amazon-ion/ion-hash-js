@@ -28,14 +28,14 @@
     "grunt-ts": "^6.0.0-beta.19",
     "grunt-typedoc": "^0.2.4",
     "intern": "^4.4.3",
-    "ion-js": "^4.0.0",
-    "jsbi": "3.1.1",
-    "typedoc": "^0.17.3",
+    "ion-js": "^5.2.0",
+    "jsbi": "^4.3.0",
+    "typedoc": "^0.23.0",
     "typedoc-plugin-no-inherit": "^1.1.10",
-    "typescript": "^3.5.3"
+    "typescript": "^4.6.0"
   },
   "peerDependencies": {
-    "ion-js": "^4.0.0",
-    "jsbi": "^3.1.1"
+    "ion-js": "^5.2.0",
+    "jsbi": "^4.3.0"
   }
 }
