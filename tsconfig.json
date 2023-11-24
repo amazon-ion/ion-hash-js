@@ -8,7 +8,9 @@
     "sourceMap": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "verbose": true
+    "verbose": true,
+    // TODO: Temporarily skipping the type checking of all declaration files in the node_modules directory. More investigations required to resolve the compiling error when setting this option as false
+    "skipLibCheck": true
   }
 }
 
