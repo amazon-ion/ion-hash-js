@@ -19,7 +19,6 @@ import {Decimal, IntSize, IonType, IonTypes, makeBinaryWriter,
 import {createHash, Hash} from 'crypto';
 
 import {Hasher, HasherProvider, HashReader, HashWriter} from "../IonHash";
-import JSBI from "jsbi";
 
 export class _CryptoHasher implements Hasher {
     private _hash: Hash;
@@ -57,9 +56,9 @@ export class _HashReaderImpl implements HashReader, _IonValue {
 
     // implements Reader
     annotations()   : string[]          { return this._reader.annotations() }
-    bigIntValue()   : JSBI | null       { return this._reader.bigIntValue() }
+    bigIntValue()   : bigint | null       { return this._reader.bigIntValue() }
     booleanValue()  : boolean | null    { return this._reader.booleanValue() }
-    byteValue()     : Uint8Array | null { return this._reader.byteValue() }
+    byteValue()     : Uint8Array | null { return this._reader.uInt8ArrayValue() }
     decimalValue()  : Decimal | null    { return this._reader.decimalValue() }
     depth()         : number            { return this._reader.depth() }
     fieldName()     : string | null     { return this._reader.fieldName() }
@@ -184,7 +183,7 @@ export class _HashWriterImpl implements HashWriter, _IonValue {
         this._hashScalar(IonTypes.FLOAT, value);
         this._writer.writeFloat64(value);
     }
-    writeInt(value: number | JSBI | null): void {
+    writeInt(value: number | bigint | null): void {
         this._hashScalar(IonTypes.INT, value);
         this._writer.writeInt(value);
     }
@@ -255,8 +254,8 @@ export class _HashWriterImpl implements HashWriter, _IonValue {
                 case IonTypes.TIMESTAMP: this.writeTimestamp(reader.timestampValue()); break;
                 case IonTypes.SYMBOL:    this.writeSymbol(reader.stringValue()); break;
                 case IonTypes.STRING:    this.writeString(reader.stringValue()); break;
-                case IonTypes.CLOB:      this.writeClob(reader.byteValue()); break;
-                case IonTypes.BLOB:      this.writeBlob(reader.byteValue()); break;
+                case IonTypes.CLOB:      this.writeClob(reader.uInt8ArrayValue()); break;
+                case IonTypes.BLOB:      this.writeBlob(reader.uInt8ArrayValue()); break;
                 case IonTypes.LIST:      this.stepIn(IonTypes.LIST); break;
                 case IonTypes.SEXP:      this.stepIn(IonTypes.SEXP); break;
                 case IonTypes.STRUCT:    this.stepIn(IonTypes.STRUCT); break;

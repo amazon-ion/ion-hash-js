@@ -13,7 +13,6 @@
  * permissions and limitations under the License.
  */
 
-import JSBI from "jsbi";
 import intern from 'intern';
 
 const {registerSuite} = intern.getPlugin('interface.object');
@@ -40,7 +39,7 @@ class ReaderComparer implements Reader {
         assert.deepEqual(this.readerA.annotations(), this.readerB.annotations());
         return this.readerA.annotations();
     }
-    bigIntValue(): JSBI | null {
+    bigIntValue(): bigint | null {
         assert.deepEqual(this.readerA.bigIntValue(), this.readerB.bigIntValue());
         return this.readerA.bigIntValue();
     }
@@ -49,8 +48,8 @@ class ReaderComparer implements Reader {
         return this.readerA.booleanValue();
     }
     byteValue(): Uint8Array | null {
-        assert.deepEqual(this.readerA.byteValue(), this.readerB.byteValue());
-        return this.readerA.byteValue()
+        assert.deepEqual(this.readerA.uInt8ArrayValue(), this.readerB.uInt8ArrayValue());
+        return this.readerA.uInt8ArrayValue()
     }
     decimalValue(): Decimal | null {
         assert.deepEqual(this.readerA.decimalValue(), this.readerB.decimalValue());
@@ -132,8 +131,8 @@ function traverse(reader: Reader) {
             case IonTypes.TIMESTAMP: { reader.timestampValue(); break }
             case IonTypes.SYMBOL:    { reader.stringValue(); break }
             case IonTypes.STRING:    { reader.stringValue(); break }
-            case IonTypes.CLOB:      { reader.byteValue(); break }
-            case IonTypes.BLOB:      { reader.byteValue(); break }
+            case IonTypes.CLOB:      { reader.uInt8ArrayValue(); break }
+            case IonTypes.BLOB:      { reader.uInt8ArrayValue(); break }
         }
         reader.isNull();
         if (!type.isContainer) {
